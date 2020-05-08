@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="NeroDungeons:jar">
+    <output-path>$USER_HOME$/Desktop</output-path>
+    <root id="archive" name="NeroDungeons.jar">
+      <element id="module-output" name="NeroDungeons" />
+      <element id="extracted-dir" path="$USER_HOME$/Desktop/api-5.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Desktop/Spigot/Spigot-API/target/spigot-api-1.15.2-R0.1-SNAPSHOT-shaded.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
