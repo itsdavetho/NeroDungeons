@@ -1,11 +1,13 @@
-package com.nerokraft.nerodungeons;
+package com.nerokraft.nerodungeons.commands.shops;
 
-import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import com.nerokraft.nerodungeons.NeroDungeons;
+import com.nerokraft.nerodungeons.utils.Utils;
 
 public class CommandCreateShop implements CommandExecutor {
 	final NeroDungeons instance;
@@ -20,7 +22,7 @@ public class CommandCreateShop implements CommandExecutor {
 			Bukkit.getLogger().info("This command cannot be executed from the console. Sorry!");
 			return false;
 		}
-		if(instance.hasPermission("nerodungeons.createshop", ((Player) sender).getPlayer()) || sender.hasPermission("nerodungeons.createshop")) {
+		if(Utils.hasPermission("nerodungeons.admin", ((Player) sender).getPlayer()) || sender.hasPermission("nerodungeons.admin")) {
 			sender.sendMessage("Hello world!");
 			return true;
 		}

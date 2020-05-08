@@ -1,0 +1,16 @@
+{
+   "info":{
+      "owner":"davesnothereman_",
+      "uuid":"973458234523"
+   },
+   "shops":[
+      {
+         "X":"0",
+         "Y":"0",
+         "Z":"0",
+         "id":"DIAMOND_SWORD",
+         "cost":"25",
+         "world": "world"
+      }
+   ]
+}

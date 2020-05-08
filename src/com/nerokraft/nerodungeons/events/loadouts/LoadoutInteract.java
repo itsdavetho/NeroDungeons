@@ -1,4 +1,4 @@
-package com.nerokraft.nerodungeons;
+package com.nerokraft.nerodungeons.events.loadouts;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -8,8 +8,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import com.nerokraft.nerodungeons.NeroDungeons;
 
-public class PlayerLoadouts implements Listener {
+public class LoadoutInteract implements Listener {
+	@SuppressWarnings("unused")
+	private final NeroDungeons instance;
+	public LoadoutInteract(NeroDungeons inst) {
+		instance = inst;
+	}
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		Player p = event.getPlayer();

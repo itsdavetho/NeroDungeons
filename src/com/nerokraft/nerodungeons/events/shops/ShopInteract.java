@@ -1,4 +1,4 @@
-package com.nerokraft.nerodungeons;
+package com.nerokraft.nerodungeons.events.shops;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -8,23 +8,28 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
 
-public class NeroShop implements Listener {
-	NeroDungeons instance = null;
+import com.nerokraft.nerodungeons.NeroDungeons;
 
-	public NeroShop(NeroDungeons plugin) {
-		instance = plugin;
+public class ShopInteract implements Listener {
+	@SuppressWarnings("unused")
+	private final NeroDungeons instance;
+	public ShopInteract(NeroDungeons inst) {
+		instance = inst;
 	}
-
+	
 	@EventHandler
 	public void onPlayerEntityInteract(PlayerInteractEntityEvent event) {
 		Player player = event.getPlayer();
 		final Entity entity = event.getRightClicked();
 		if(entity instanceof ItemFrame) {
+			@SuppressWarnings("unused")
 			Location l = entity.getLocation();
 			final ItemFrame frame = (ItemFrame) entity;
 	        final ItemStack item = frame.getItem();
+	       // if(isShop(l)) {
+	        	player.sendMessage("Fuck! " + item.getType().name());
+	        //}
 		}
 		
 	}
