@@ -7,55 +7,81 @@ import java.io.FileReader;
 import java.util.HashMap;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.event.Listener;
-
+import org.bukkit.World;
+import org.bukkit.block.Block;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.nerokraft.nerodungeons.NeroDungeons;
 import com.nerokraft.nerodungeons.utils.Utils;
 
-public class NeroShop implements Listener {
+public class NeroShop {
 	NeroDungeons instance = null;
-	private HashMap<String, Shop> shops = new HashMap<String, Shop>();
+	private HashMap<Block, Shop> shops = new HashMap<Block, Shop>();
 
 	public NeroShop(NeroDungeons plugin) {
 		instance = plugin;
 		loadShops();
 	}
 
+	public void loadShop(Shop shop) {
+		shops.put(shop.getBlock(), shop);
+	}
+
+	public void unloadShop(Shop shop) {
+		shops.remove(shop.getBlock());
+	}
+
+	public Shop getShop(Block b) {
+		if (shops.containsKey(b) && shops.get(b) instanceof Shop) {
+			return shops.get(b);
+		}
+		return null;
+	}
+
 	private void loadShops() {
 		File[] shops = Utils.getConfigs("shops", instance);
-		for(File f : shops) {
-			String path = instance.getDataFolder() + "/shops/" + f.getName();
+		for (File f : shops) {
 			try {
-				int x = 0, y = 0, z = 0, cost = 25; // nothing is free
-				String owner = null;
-				UUID uuid = null;
-				String world = null;
-				Material mat = Material.COBBLESTONE;
-				
+				String path = instance.getDataFolder() + "/shops/" + f.getName();
 				BufferedReader br = new BufferedReader(new FileReader(path));
-				Gson g = new Gson();
-				JsonObject js = g.fromJson(br, JsonObject.class);
-				for(JsonElement e : js.getAsJsonArray("shops")) {
+				Gson gson = new Gson();
+				JsonObject data = gson.fromJson(br, JsonObject.class);
+				JsonObject info = data.getAsJsonObject("info");
+				String owner = info.get("owner").getAsString();
+				UUID uuid = UUID.fromString(info.get("uuid").getAsString());
+				JsonArray shopsArray = data.getAsJsonArray("shops");
+				for (JsonElement e : shopsArray) {
+					World world = null;
+					double x = 0, y = 0, z = 0;
+					Material material = Material.COBBLESTONE; // fallback material
+					int cost = 25, amount = 1; // nothing is free
 					JsonObject jo = e.getAsJsonObject();
-					x = jo.get("x").getAsInt();
-					y = jo.get("y").getAsInt();
-					z = jo.get("z").getAsInt();
-					world = jo.get("world").getAsString();
-					mat = Material.getMaterial(jo.get("id").getAsString());
+					String itemId = jo.get("id").getAsString().toUpperCase();
+					String worldName = jo.get("world").getAsString();
+					world = Bukkit.getServer().getWorld(worldName);
+					if (world == null) {
+						Bukkit.getLogger().warning("[NeroShop] <" + owner + "> has a shop on an invalid world: " + world);
+						continue;
+					} else if (Material.matchMaterial(itemId) == null) {
+						Bukkit.getLogger().warning("[NeroShop] <" + owner + "> has a shop with an invalid material: " + itemId);
+						continue;
+					}
+					x = jo.get("x").getAsDouble();
+					y = jo.get("y").getAsDouble();
+					z = jo.get("z").getAsDouble();
+					cost = jo.get("cost").getAsInt();
+					amount = jo.get("amount").getAsInt();
+					material = Material.getMaterial(itemId);
+					loadShop(new Shop(world, x, y, z, uuid, owner, material, cost, amount));
 				}
-				for(JsonElement e : js.getAsJsonArray("info")) {
-					JsonObject jo = e.getAsJsonObject();
-					owner = jo.get("owner").getAsString();
-					uuid = UUID.fromString(jo.get("uuid").getAsString());
-				}
-				
-				new Shop(world, x, y, z, uuid, owner, mat, cost);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
+			} catch (NullPointerException e) {
+				Bukkit.getLogger().warning("[NeroShop] Malformed JSON");
 			}
 		}
 	}

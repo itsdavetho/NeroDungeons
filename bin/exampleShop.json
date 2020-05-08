@@ -1,15 +1,17 @@
 {
    "info":{
-      "name":"davesnothereman_",
-      "uuid":973458234523
+      "owner":"davesnothereman_",
+      "uuid":"f81d4fae-7dec-11d0-a765-00a0c91e6bf6"
    },
    "shops":[
       {
-         "X":0,
-         "Y":0,
-         "Z":0,
+         "x":"4804.33",
+         "y":"16",
+         "z":"-3582",
          "id":"DIAMOND_SWORD",
-         "cost":25
+         "cost":"25",
+         "world": "world",
+         "amount": "1"
       }
    ]
 }

@@ -19,13 +19,13 @@ import net.luckperms.api.util.Tristate;
 public class Utils {
 	public static LuckPerms getPermissionProvider() {
 		RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
-		if(provider != null) {
+		if (provider != null) {
 			LuckPerms api = provider.getProvider();
 			return api;
 		}
 		return null;
 	}
-	
+
 	public static User loadUser(Player p) {
 		if (!p.isOnline()) {
 			throw new IllegalStateException("Player is offline!");
@@ -35,14 +35,14 @@ public class Utils {
 	}
 
 	@SuppressWarnings("unused")
-	public static boolean hasPermission(String permission, Player p) {
-		ImmutableContextSet cs = getPermissionProvider().getContextManager().getContext(p);
-		QueryOptions qo = getPermissionProvider().getContextManager().getQueryOptions(p);
-		CachedPermissionData data = loadUser(p).getCachedData().getPermissionData(qo);
+	public static boolean hasPermission(String permission, Player player) {
+		ImmutableContextSet cs = getPermissionProvider().getContextManager().getContext(player);
+		QueryOptions qo = getPermissionProvider().getContextManager().getQueryOptions(player);
+		CachedPermissionData data = loadUser(player).getCachedData().getPermissionData(qo);
 		Tristate result = data.checkPermission(permission);
-		return result.asBoolean();
+		return ((result.asBoolean() == true) || player.hasPermission(permission));
 	}
-	
+
 	public static File[] getConfigs(String configName, NeroDungeons inst) {
 		File config = new File(inst.getDataFolder(), configName + "/");
 		File[] configs = config.listFiles(new FilenameFilter() {
@@ -50,7 +50,7 @@ public class Utils {
 				return name.toLowerCase().endsWith(".json");
 			}
 		});
-		
+
 		return configs;
 	}
 }

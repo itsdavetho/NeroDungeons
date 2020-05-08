@@ -10,3 +10,6 @@ permissions:
   nerodungeons.admin:
     description: All permissions
     default: op
+  nerodungeons.verbose:
+    description: Turn on verbose output
+    default: op
