@@ -44,6 +44,7 @@ public class ShopInteract implements Listener {
 			Shop s = instance.getShops().getShop(block);
 			if (s != null) {
 				event.setCancelled(ShopDestroy.destroy(player, s, instance) == false);
+				System.out.println("destroy4");
 			}
 		}
 	}
@@ -59,21 +60,27 @@ public class ShopInteract implements Listener {
 					ShopDestroy.destroy(shop, instance);
 				}
 			} else {
-				event.setCancelled(true);
+				event.setCancelled(shop != null);
+				System.out.println("destroy3");
 			}
 		}
 	}
 
 	@EventHandler
 	public void onHangingBreakByEntity(HangingBreakByEntityEvent event) {
-		Player player = (Player) event.getRemover();
-		Block block = player.getWorld().getBlockAt(event.getEntity().getLocation());
-		Shop shop = instance.getShops().getShop(block);
-		if (event.getRemover() instanceof Player && shop != null) {
-			event.setCancelled(ShopDestroy.destroy(player, shop, instance) == false);
-		} else if (event.getRemover() instanceof Projectile && shop != null) {
-			event.getRemover().remove();
-			event.setCancelled(true);
+		if(event.getEntity() instanceof ItemFrame) {
+			Player player = (Player) event.getRemover();
+			Block block = player.getWorld().getBlockAt(event.getEntity().getLocation());
+			Shop shop = instance.getShops().getShop(block);
+			if (event.getRemover() instanceof Player && shop != null) {
+				event.setCancelled(ShopDestroy.destroy(player, shop, instance) == false);
+				System.out.println("destroy7");
+			} else if (event.getRemover() instanceof Projectile && shop != null) {
+				event.getRemover().remove();
+				event.setCancelled(true);
+				System.out.println("destroy8");
+			}
+			System.out.println("destroy5");
 		}
 	}
 
@@ -109,7 +116,7 @@ public class ShopInteract implements Listener {
 		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getPlayer().isSneaking() && Utils.hasPermission("nerodungeons.createshop", player)) {
 			if (block.getType() == Material.CHEST) {
 				ShopCreate creator = instance.getShops().getShopInteractions().getCreator(player);
-				if (creator != null && creator.waitingForChest()) {
+				if (creator != null && creator.waitingForChest() && !creator.getAdminShop()) {
 					boolean adminShop = itemInHand.equals(Material.BLAZE_ROD)
 							&& Utils.hasPermission("nerodungeons.admin", player);
 					if (!adminShop) {
@@ -126,8 +133,13 @@ public class ShopInteract implements Listener {
 				}
 			}
 		} else if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-			Shop shop = instance.getShops().getShopByChest(block);
-			event.setCancelled(ShopDestroy.destroy(player, shop, instance) == false);
+			if(block.getType() == Material.CHEST) { 
+				Shop shop = instance.getShops().getShopByChest(block);
+				if(shop != null) {
+					event.setCancelled(ShopDestroy.destroy(player, shop, instance) == false);
+					System.out.println("destroy6");
+				}
+			}
 		}
 
 	}

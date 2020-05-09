@@ -34,9 +34,9 @@ public class Utils {
 	}
 
 	public static void sendMessage(String message, ChatColor color, Player player) {
-		TextComponent t = new TextComponent(message);
+		TextComponent t = new TextComponent("[NeroShop] " + message);
 		t.setColor(color);
-		player.sendMessage("[NeroShop] " + message);
+		player.sendMessage(message);
 	}
 
 	public static void verboseOutput(Player player, String message, NeroDungeons inst) {

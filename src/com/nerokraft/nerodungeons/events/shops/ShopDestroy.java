@@ -14,11 +14,13 @@ public class ShopDestroy {
 		if(shop != null && !shop.getUUID().equals(player.getUniqueId()) && !Utils.hasPermission("nerodungeons.admin", player)) {
 			Utils.sendMessage("You can't destroy that", ChatColor.RED, player);
 			return false;
-		} else { 			
+		} else if(shop != null) { 			
 			instance.getShops().removeShop(shop);
 			Utils.sendMessage("Shop removed", ChatColor.GREEN, player);
 			return true;
 		}
+		player.sendMessage("destroy1");
+		return true;
 	}
 	
 	public static void destroy(Shop shop, NeroDungeons instance) {
@@ -26,6 +28,7 @@ public class ShopDestroy {
 			return;
 		}
 		instance.getShops().removeShop(shop);
+		System.out.println("destroy2");
 	}
 
 }
