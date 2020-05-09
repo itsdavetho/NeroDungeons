@@ -3,20 +3,30 @@ package com.nerokraft.nerodungeons.events.shops;
 import java.util.HashMap;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 //import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
+import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
 import com.nerokraft.nerodungeons.NeroDungeons;
 import com.nerokraft.nerodungeons.shops.Shop;
 import com.nerokraft.nerodungeons.utils.Utils;
+
+import net.md_5.bungee.api.ChatColor;
 
 public class ShopInteract implements Listener {
 	private final NeroDungeons instance;
@@ -27,42 +37,99 @@ public class ShopInteract implements Listener {
 	}
 
 	@EventHandler
+	public void entityDamageByEntity(EntityDamageByEntityEvent event) {
+		if (event.getDamager() instanceof Player && event.getEntity() instanceof ItemFrame) {
+			Player player = (Player) event.getDamager();
+			Block block = player.getWorld().getBlockAt(event.getEntity().getLocation());
+			Shop s = instance.getShops().getShop(block);
+			if (s != null) {
+				event.setCancelled(ShopDestroy.destroy(player, s, instance) == false);
+			}
+		}
+	}
+
+	@EventHandler
+	public void onHangingBreakEvent(HangingBreakEvent event) {
+		if (event.getEntity() instanceof ItemFrame) {
+			Shop shop = instance.getShops()
+					.getShop(event.getEntity().getWorld().getBlockAt(event.getEntity().getLocation()));
+			if (event.getCause() == RemoveCause.PHYSICS || event.getCause() == RemoveCause.EXPLOSION
+					|| event.getCause() == RemoveCause.OBSTRUCTION) {
+				if (shop != null) {
+					ShopDestroy.destroy(shop, instance);
+				}
+			} else {
+				event.setCancelled(true);
+			}
+		}
+	}
+
+	@EventHandler
+	public void onHangingBreakByEntity(HangingBreakByEntityEvent event) {
+		Player player = (Player) event.getRemover();
+		Block block = player.getWorld().getBlockAt(event.getEntity().getLocation());
+		Shop shop = instance.getShops().getShop(block);
+		if (event.getRemover() instanceof Player && shop != null) {
+			event.setCancelled(ShopDestroy.destroy(player, shop, instance) == false);
+		} else if (event.getRemover() instanceof Projectile && shop != null) {
+			event.getRemover().remove();
+			event.setCancelled(true);
+		}
+	}
+
+	@EventHandler
 	public void onPlayerEntityInteract(PlayerInteractEntityEvent event) {
 		Player player = event.getPlayer();
 		final Entity entity = event.getRightClicked();
+
 		if (entity instanceof ItemFrame) {
 			// Location l = entity.getLocation();
 			final ItemFrame frame = (ItemFrame) entity;
 			final ItemStack item = frame.getItem();
 			Block b = player.getWorld().getBlockAt(frame.getLocation());
-			if (instance.getConfig().getInt("verboseoutput") > 0
-					&& (Utils.hasPermission("nerodungeons.verbose", player))) {
-				player.sendMessage(b.getBlockData().getMaterial().name());
-			}
-			if (instance.getShops().getShop(b) == null) { // there's no shop here, we can proceed to do other things
-				if (instance.getConfig().getInt("verboseoutput") > 0
-						&& (Utils.hasPermission("nerodungeons.verbose", player))) {
-					player.sendMessage("Fuck! no shop " + item.getType().name());
-				}
-				if (!isCreating(player)
-						&& player.getInventory().getItemInMainHand().getType().equals(Material.BLAZE_ROD)) {
-					addShopCreator(player, frame);
-					event.setCancelled(true);
-				} else if (isCreating(player)) {
-					if (player.isSneaking()) {
-						removeShopCreator(player);
-						event.setCancelled(true);
-					} else {
-						getCreator(player).process(event);
-					}
-				}
+			Utils.verboseOutput(player, b.getBlockData().getMaterial().name(), instance);
+			if (Utils.hasPermission("nerodungeons.createshop", player) && instance.getShops().getShop(b) == null && Utils.canBuild(b.getLocation(), player)) {
+				ShopCreate.toggleCreator(player, event, this, item, frame);
 			} else {
-				Shop shop = instance.getShops().getShop(b);
-				player.sendMessage("Shop here: " + shop.getOwner() + " is selling " + shop.getMaterial().name()
-						+ " for " + shop.getCost() + " reward points");
-				player.getInventory().addItem(new ItemStack(shop.getMaterial(), shop.getAmount()));
+				if (Utils.hasPermission("nerodungeons.buy", player)) {
+					Shop shop = instance.getShops().getShop(b);
+					ShopBuy.buy(player, shop);
+				}
+				event.setCancelled(true);
 			}
 		}
+	}
+
+	@EventHandler
+	public void onPlayerInteract(PlayerInteractEvent event) {
+		Block block = event.getClickedBlock();
+		Player player = event.getPlayer();
+		Material itemInHand = player.getInventory().getItemInMainHand().getType();
+
+		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getPlayer().isSneaking() && Utils.hasPermission("nerodungeons.createshop", player)) {
+			if (block.getType() == Material.CHEST) {
+				ShopCreate creator = instance.getShops().getShopInteractions().getCreator(player);
+				if (creator != null && creator.waitingForChest()) {
+					boolean adminShop = itemInHand.equals(Material.BLAZE_ROD)
+							&& Utils.hasPermission("nerodungeons.admin", player);
+					if (!adminShop) {
+						Location chestLocation = block.getLocation();
+						if (Utils.canBuild(chestLocation, player)) {
+							Utils.sendMessage("Chest selected", ChatColor.DARK_PURPLE, player);
+							creator.setChestLocation(chestLocation);
+						}
+						event.setCancelled(true);
+					} else if (adminShop) {
+						creator.setAdminShop(true);
+					}
+					event.setCancelled(true);
+				}
+			}
+		} else if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+			Shop shop = instance.getShops().getShopByChest(block);
+			event.setCancelled(ShopDestroy.destroy(player, shop, instance) == false);
+		}
+
 	}
 
 	public void addShopCreator(Player player, ItemFrame frame) {
@@ -70,7 +137,7 @@ public class ShopInteract implements Listener {
 			Bukkit.getLogger().warning("This probably should not have happened");
 			return;
 		}
-		ShopCreate creator = new ShopCreate(player, frame, this);
+		ShopCreate creator = new ShopCreate(player, frame, instance);
 		creators.put(player, creator);
 	}
 

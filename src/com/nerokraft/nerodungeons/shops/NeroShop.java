@@ -4,35 +4,50 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.nerokraft.nerodungeons.NeroDungeons;
+import com.nerokraft.nerodungeons.events.shops.ShopInteract;
 import com.nerokraft.nerodungeons.utils.Utils;
 
 public class NeroShop {
-	NeroDungeons instance = null;
+	private NeroDungeons instance = null;
+	private ShopInteract shopInteract = null;
 	private HashMap<Block, Shop> shops = new HashMap<Block, Shop>();
 
-	public NeroShop(NeroDungeons plugin) {
+	public NeroShop(NeroDungeons plugin, ShopInteract shopInteract) {
 		instance = plugin;
+		this.shopInteract = shopInteract;
 		loadShops();
 	}
 
-	public void loadShop(Shop shop) {
+	public ShopInteract getShopInteractions() {
+		return shopInteract;
+	}
+	
+	public void addShop(Shop shop) {
 		shops.put(shop.getBlock(), shop);
 	}
 
-	public void unloadShop(Shop shop) {
-		shops.remove(shop.getBlock());
+	public void removeShop(Shop shop) {
+		if(shop != null) {
+			shops.remove(shop.getBlock());
+		} else {
+			Bukkit.getLogger().warning("[NeroShop] Shop was null");
+		}
 	}
 
 	public Shop getShop(Block b) {
@@ -41,47 +56,71 @@ public class NeroShop {
 		}
 		return null;
 	}
+	
+	public Shop getShopByChest(Block block) {
+		if(block.getType().equals(Material.CHEST)) {
+			for(Shop s : shops.values()) {
+				if(s.getChestLocation().equals(block.getLocation())) {
+					return s;
+				}
+			}
+		}
+		return null;
+	}
+
+	public HashMap<Block, Shop> getRoster() {
+		return this.shops;
+	}
+
+	public void saveShops(Player p) {
+		String path = instance.getDataFolder() + "/shops/" + p.getUniqueId();
+		Gson gson = new Gson();
+		HashMap<Block, Shop> roster = getRoster();
+		JsonObject json = new JsonObject();
+		json.addProperty("owner", p.getName());
+		JsonArray shops = new JsonArray();
+		for (Shop s : roster.values()) {
+			if (s.getUUID().equals(p.getUniqueId())) {
+				JsonElement j = gson.toJsonTree(s, Shop.class);
+				shops.add(j);
+			}
+		}
+		json.add("shops", shops);
+		try {
+			//gson.toJson(json, new FileWriter(path));
+			Gson test = new Gson();
+			test.toJson(json, new FileWriter(new File(path)));
+		} catch (JsonIOException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	private void loadShops() {
 		File[] shops = Utils.getConfigs("shops", instance);
 		for (File f : shops) {
 			try {
-				String path = instance.getDataFolder() + "/shops/" + f.getName();
+				String filename = f.getName();
+				UUID uuid = UUID.fromString(f.getName());
+				if (uuid == null) {
+					Bukkit.getLogger().warning("All shop filenames must be UUIDs. Skipped " + filename);
+					continue;
+				}
+				String path = instance.getDataFolder() + "/shops/" + filename;
 				BufferedReader br = new BufferedReader(new FileReader(path));
 				Gson gson = new Gson();
 				JsonObject data = gson.fromJson(br, JsonObject.class);
-				JsonObject info = data.getAsJsonObject("info");
-				String owner = info.get("owner").getAsString();
-				UUID uuid = UUID.fromString(info.get("uuid").getAsString());
+				String owner = data.get("owner").getAsString();
 				JsonArray shopsArray = data.getAsJsonArray("shops");
 				for (JsonElement e : shopsArray) {
-					World world = null;
-					double x = 0, y = 0, z = 0;
-					Material material = Material.COBBLESTONE; // fallback material
-					int cost = 25, amount = 1; // nothing is free
-					JsonObject jo = e.getAsJsonObject();
-					String itemId = jo.get("id").getAsString().toUpperCase();
-					String worldName = jo.get("world").getAsString();
-					world = Bukkit.getServer().getWorld(worldName);
-					if (world == null) {
-						Bukkit.getLogger().warning("[NeroShop] <" + owner + "> has a shop on an invalid world: " + world);
-						continue;
-					} else if (Material.matchMaterial(itemId) == null) {
-						Bukkit.getLogger().warning("[NeroShop] <" + owner + "> has a shop with an invalid material: " + itemId);
-						continue;
-					}
-					x = jo.get("x").getAsDouble();
-					y = jo.get("y").getAsDouble();
-					z = jo.get("z").getAsDouble();
-					cost = jo.get("cost").getAsInt();
-					amount = jo.get("amount").getAsInt();
-					material = Material.getMaterial(itemId);
-					loadShop(new Shop(world, x, y, z, uuid, owner, material, cost, amount));
+					Shop s = gson.fromJson(e, Shop.class).setup(owner, uuid);
+					addShop(s);
 				}
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (NullPointerException e) {
-				Bukkit.getLogger().warning("[NeroShop] Malformed JSON");
+				e.printStackTrace();
 			}
 		}
 	}

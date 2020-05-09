@@ -4,7 +4,7 @@ version: 1.0
 api-version: 1.15
 commands:
   nerodungeon:
-    description: base nerodungeons command
+    description: base nerodungeons command [nd cs|rs]
     aliases: nd
 permissions:
   nerodungeons.admin:
@@ -12,4 +12,16 @@ permissions:
     default: op
   nerodungeons.verbose:
     description: Turn on verbose output
+    default: op
+  nerodungeons.createshop:
+    description: Allowed to make shops
+    default: op
+  nerodungeons.buy:
+    description: Buy any products
+    default: true
+  nerodungeons.buy.many:
+    description: Buy more than one set at a time
+    default: op
+  nerodungeons.buy.own:
+    description: Buy own products
     default: op

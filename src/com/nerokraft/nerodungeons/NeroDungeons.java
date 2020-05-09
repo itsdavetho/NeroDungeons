@@ -16,9 +16,10 @@ public class NeroDungeons extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		this.saveDefaultConfig();
-		neroShops = new NeroShop(this);
+		ShopInteract shopInteraction = new ShopInteract(this);
+		neroShops = new NeroShop(this, shopInteraction);
 		getServer().getPluginManager().registerEvents(new LoadoutInteract(this), this);
-		getServer().getPluginManager().registerEvents(new ShopInteract(this), this);
+		getServer().getPluginManager().registerEvents(shopInteraction, this);
 		this.getCommand("nerodungeon").setExecutor(new CommandIntake(this));
 
 	}
