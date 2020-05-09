@@ -1,5 +1,6 @@
 package com.nerokraft.nerodungeons.commands;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import com.nerokraft.nerodungeons.events.shops.ShopCreate;
@@ -36,9 +37,10 @@ public class CommandCreateShop {
 				}
 				System.out.println(creator.waitingForChest());
 				System.out.println(creator);
+				System.out.println("addy" + creator.getAdminShop());
 				if (creator != null && creator.waitingForChest() == false) {
 					int amount = Integer.parseInt(args[1]);
-					int cost = Integer.parseInt(args[2]);
+					double cost = Double.parseDouble(args[2]);
 					if (amount <= 0) {
 						Utils.sendMessage("Amount must be more than zero", ChatColor.RED, player);
 						return;
@@ -50,8 +52,9 @@ public class CommandCreateShop {
 					creator.setAmount(amount);
 					creator.setCost(cost);
 					creator.setCurrency(currency);
+					Location loca = creator.getChestLocation();
+					System.out.println(loca);
 					creator.insertShop();
-					intake.getPlugin().getShops().getShopInteractions().removeShopCreator(player);
 					intake.getPlugin().getShops().saveShops(player);
 				} else if (creator != null && creator.waitingForChest() == true) {
 					Utils.sendMessage("You still need to select a chest", ChatColor.BLUE, player);

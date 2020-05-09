@@ -1,5 +1,6 @@
 package com.nerokraft.nerodungeons.events.shops;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ItemFrame;
@@ -41,7 +42,7 @@ public class ShopCreate extends Shop {
 	}
 
 	public boolean waitingForChest() {
-		return (this.getAdminShop() == false && (super.getChest().getType().equals(Material.CHEST))) == false;
+		return (super.getChest().getType().equals(Material.CHEST)) == false;
 	}
 
 	public void initialize(PlayerInteractEntityEvent event, ShopInteract shopInteract) {
@@ -66,14 +67,16 @@ public class ShopCreate extends Shop {
 	public void insertShop() {
 		if (super.getAmount() > 0 && super.getCost() > 0) {
 			Block block = player.getWorld().getBlockAt(super.getFrameLocation());
-			this.getInstance().getShops().addShop(new Shop(block.getLocation(), super.getChestLocation(), player.getUniqueId(),
-					player.getName(), super.getMaterial(), super.getCost(), super.getAmount(),
-					super.getAdminShop(), super.getCurrency()));
+			Location loca = super.getChestLocation();
+			System.out.println(loca);
+			Shop shop = new Shop(block.getLocation(), loca, player.getUniqueId(), player.getName(), super.getMaterial(),
+					super.getCost(), super.getAmount(), super.getAdminShop(), super.getCurrency());
+			this.getInstance().getShops().addShop(shop);
 			getInstance().getShops().getShopInteractions().removeShopCreator(player);
+			this.instance = null;
+			this.player = null;
+			this.frame = null;
 		}
-		this.instance = null;
-		this.player = null;
-		this.frame = null;
 	}
 
 	private NeroDungeons getInstance() {

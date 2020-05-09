@@ -15,14 +15,18 @@ public class Shop {
 	private transient UUID uuid;
 	private transient Material material;
 	private transient World worldObj;
+	private String owner;
 
 	@Expose
 	private double x, y, z, cx, cy, cz;
 	@Expose
 	private String world;
-	private transient String owner, id;
 	@Expose
-	private int cost = 1, amount = 1;
+	private String id;
+	@Expose
+	private Double cost = 1.0;
+	@Expose
+	private int amount = 1;
 	@Expose
 	private boolean adminShop = false;
 	private Currency currency;
@@ -31,6 +35,10 @@ public class Shop {
 		this.worldObj = Bukkit.getWorld(world);
 		this.uuid = uuid;
 		this.owner = owner;
+		Location chest = new Location(worldObj, cx, cy, cz);
+		if(chest != null) {
+			this.setChestLocation(chest);
+		}
 		if (Material.matchMaterial(id) != null) {
 			this.material = Material.getMaterial(id);
 		} else {
@@ -41,7 +49,7 @@ public class Shop {
 		return this;
 	}
 
-	public Shop(Location frame, Location chest, UUID uuid, String owner, Material material, int cost, int amount,
+	public Shop(Location frame, Location chest, UUID uuid, String owner, Material material, double cost, int amount,
 			boolean adminShop, Currency currency) {
 		this.x = frame.getX();
 		this.y = frame.getY();
@@ -52,6 +60,10 @@ public class Shop {
 		this.worldObj = frame.getWorld();
 		this.world = worldObj.getName();
 		this.amount = amount;
+		this.adminShop = adminShop;
+		if(chest != null) {
+			this.setChestLocation(chest);
+		}
 		this.setCurrency(currency);
 		if (material != null && cost > 0 && amount > 0) {
 			this.setMaterial(material);
@@ -110,10 +122,12 @@ public class Shop {
 		this.cx = location.getX();
 		this.cy = location.getY();
 		this.cz = location.getZ();
+		this.worldObj = location.getWorld();
+		System.out.println("setchestlocation " + cx + " " + cy + " " + cz);
 	}
 
 	public Location getChestLocation() {
-		return new Location(getWorld(), cx, cy, cz);
+		return new Location(Bukkit.getWorld(world), cx, cy, cz);
 	}
 
 	public Block getChest() {
@@ -124,11 +138,11 @@ public class Shop {
 		return this.getMaterial().name();
 	}
 
-	public void setCost(int cost) {
+	public void setCost(double cost) {
 		this.cost = cost;
 	}
 
-	public int getCost() {
+	public double getCost() {
 		return cost;
 	}
 

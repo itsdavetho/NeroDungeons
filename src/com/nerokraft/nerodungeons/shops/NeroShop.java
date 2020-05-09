@@ -1,11 +1,14 @@
 package com.nerokraft.nerodungeons.shops;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -87,9 +90,11 @@ public class NeroShop {
 		}
 		json.add("shops", shops);
 		try {
-			//gson.toJson(json, new FileWriter(path));
-			Gson test = new Gson();
-			test.toJson(json, new FileWriter(new File(path)));
+			try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+		              new FileOutputStream(path), "utf-8"))) {
+		   String toFile = "" + json;
+		   writer.write(toFile);
+		}
 		} catch (JsonIOException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -98,23 +103,28 @@ public class NeroShop {
 	}
 
 	private void loadShops() {
-		File[] shops = Utils.getConfigs("shops", instance);
-		for (File f : shops) {
+		File[] files = Utils.getConfigs("shops", instance, "");
+		System.out.println(files);
+		for (File f : files) {
 			try {
 				String filename = f.getName();
 				UUID uuid = UUID.fromString(f.getName());
+				System.out.println(filename + " file ");
 				if (uuid == null) {
 					Bukkit.getLogger().warning("All shop filenames must be UUIDs. Skipped " + filename);
 					continue;
 				}
 				String path = instance.getDataFolder() + "/shops/" + filename;
+				System.out.println(path + " path " );
 				BufferedReader br = new BufferedReader(new FileReader(path));
 				Gson gson = new Gson();
 				JsonObject data = gson.fromJson(br, JsonObject.class);
 				String owner = data.get("owner").getAsString();
 				JsonArray shopsArray = data.getAsJsonArray("shops");
+				System.out.println("Shop data " + shopsArray);
 				for (JsonElement e : shopsArray) {
 					Shop s = gson.fromJson(e, Shop.class).setup(owner, uuid);
+					System.out.println("shop " + s + " aaa");
 					addShop(s);
 				}
 			} catch (FileNotFoundException e) {

@@ -19,7 +19,6 @@ public class ShopDestroy {
 			Utils.sendMessage("Shop removed", ChatColor.GREEN, player);
 			return true;
 		}
-		player.sendMessage("destroy1");
 		return true;
 	}
 	
@@ -28,7 +27,9 @@ public class ShopDestroy {
 			return;
 		}
 		instance.getShops().removeShop(shop);
-		System.out.println("destroy2");
+		if(shop.getPlayer().isOnline()) {
+			Utils.sendMessage("Your shop was destroyed!", ChatColor.YELLOW, shop.getPlayer());
+		}
 	}
 
 }
