@@ -1,35 +1,32 @@
 package com.nerokraft.nerodungeons.events.shops;
 
-import org.bukkit.entity.Player;
+import org.bukkit.Material;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.ItemFrame;
+import org.bukkit.inventory.ItemStack;
 
-import com.nerokraft.nerodungeons.NeroDungeons;
 import com.nerokraft.nerodungeons.shops.Shop;
-import com.nerokraft.nerodungeons.utils.Utils;
+import com.nerokraft.nerodungeons.utils.Output;
 
 import net.md_5.bungee.api.ChatColor;
 
 public class ShopDestroy {
-
-	public static boolean destroy(Player player, Shop shop, NeroDungeons instance) {
-		if(shop != null && !shop.getUUID().equals(player.getUniqueId()) && !Utils.hasPermission("nerodungeons.admin", player)) {
-			Utils.sendMessage("You can't destroy that", ChatColor.RED, player);
+	public static boolean destroy(Shop shop) {
+		if(shop == null) {
 			return false;
-		} else if(shop != null) { 			
-			instance.getShops().removeShop(shop);
-			Utils.sendMessage("Shop removed", ChatColor.GREEN, player);
-			return true;
+		}
+		Entity[] es = shop.getWorld().getChunkAt(shop.getBlock()).getEntities();
+		for(Entity e : es) {
+			if(e instanceof ItemFrame && e.getLocation().equals(shop.getFrameLocation())) {
+				((ItemFrame) e).setItem(new ItemStack(Material.AIR));
+				break;
+			}
+		}
+		shop.getShops().removeShop(shop);
+		if(shop.getPlayer().isOnline()) {
+			Output.sendMessage("Your shop was destroyed!", ChatColor.YELLOW, shop.getPlayer());
 		}
 		return true;
-	}
-	
-	public static void destroy(Shop shop, NeroDungeons instance) {
-		if(shop == null) {
-			return;
-		}
-		instance.getShops().removeShop(shop);
-		if(shop.getPlayer().isOnline()) {
-			Utils.sendMessage("Your shop was destroyed!", ChatColor.YELLOW, shop.getPlayer());
-		}
 	}
 
 }

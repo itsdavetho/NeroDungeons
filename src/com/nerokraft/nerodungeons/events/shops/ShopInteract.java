@@ -5,7 +5,6 @@ import java.util.HashMap;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-//import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
@@ -16,14 +15,13 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
-import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
 
 import com.nerokraft.nerodungeons.NeroDungeons;
 import com.nerokraft.nerodungeons.shops.Shop;
-import com.nerokraft.nerodungeons.utils.Utils;
+import com.nerokraft.nerodungeons.utils.Output;
+import com.nerokraft.nerodungeons.utils.PlayerUtil;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -41,10 +39,11 @@ public class ShopInteract implements Listener {
 			Player player = (Player) event.getDamager();
 			Block block = player.getWorld().getBlockAt(event.getEntity().getLocation());
 			Shop s = instance.getShops().getShop(block);
-			System.out.println("destroy44");
 			if (s != null) {
-				event.setCancelled(ShopDestroy.destroy(player, s, instance) == false);
-				System.out.println("destroy4");
+				ShopDestroy.destroy(s);
+				event.setCancelled(true);
+			} else if(creators.containsKey(player) && creators.get(player).getFrameLocation().equals(event.getEntity().getLocation())) {
+				this.removeShopCreator(player, true);
 			}
 		}
 	}
@@ -52,35 +51,42 @@ public class ShopInteract implements Listener {
 	@EventHandler
 	public void onHangingBreakEvent(HangingBreakEvent event) {
 		if (event.getEntity() instanceof ItemFrame) {
+			boolean cancel = false;
 			Shop shop = instance.getShops()
 					.getShop(event.getEntity().getWorld().getBlockAt(event.getEntity().getLocation()));
-			if (event.getCause() == RemoveCause.PHYSICS || event.getCause() == RemoveCause.EXPLOSION
-					|| event.getCause() == RemoveCause.OBSTRUCTION) {
-				if (shop != null) {
-					ShopDestroy.destroy(shop, instance);
-					System.out.println("system4");
-				}
+			if (shop != null) {
+				cancel = ShopDestroy.destroy(shop);
 			} else {
-				event.setCancelled(shop != null);
-				System.out.println("destroy3");
+				cancel = removeCreatorByLocation(event.getEntity().getLocation());
+			}
+			event.setCancelled(cancel);
+		}
+	}
+
+	private boolean removeCreatorByLocation(Location location) {
+		for (ShopCreate creator : creators.values()) {
+			if (creator.getFrameLocation().equals(location)) {
+				this.removeShopCreator(creator.getPlayer(), true);
+				return true;
 			}
 		}
+		return false;
 	}
 
 	@EventHandler
 	public void onHangingBreakByEntity(HangingBreakByEntityEvent event) {
 		if (event.getEntity() instanceof ItemFrame) {
+			boolean cancel = false;
 			Block block = event.getEntity().getWorld().getBlockAt(event.getEntity().getLocation());
 			Shop shop = instance.getShops().getShop(block);
 			if (event.getRemover() instanceof Player && shop != null) {
 				Player player = (Player) event.getRemover();
-				event.setCancelled(ShopDestroy.destroy(player, shop, instance) == false);
-				System.out.println("destroy7");
-			} else if (shop != null) {
-				event.setCancelled(true);
-				System.out.println("destroy8");
-			} 
-			System.out.println("destroy5");
+				if(shop.getUUID().equals(player.getUniqueId()) && PlayerUtil.canBuild(shop.getFrameLocation(), player)) {
+					cancel = ShopDestroy.destroy(shop);
+				}
+			}
+			cancel = removeCreatorByLocation(event.getEntity().getLocation());
+			event.setCancelled(cancel);
 		}
 	}
 
@@ -88,24 +94,15 @@ public class ShopInteract implements Listener {
 	public void onPlayerEntityInteract(PlayerInteractEntityEvent event) {
 		Player player = event.getPlayer();
 		final Entity entity = event.getRightClicked();
-
 		if (entity instanceof ItemFrame) {
-			// Location l = entity.getLocation();
 			final ItemFrame frame = (ItemFrame) entity;
-			final ItemStack item = frame.getItem();
 			Block b = player.getWorld().getBlockAt(frame.getLocation());
-			Utils.verboseOutput(player, b.getBlockData().getMaterial().name(), instance);
-			if (Utils.hasPermission("nerodungeons.createshop", player) && instance.getShops().getShop(b) == null
-					&& Utils.canBuild(b.getLocation(), player)) {
-				ShopCreate.toggleCreator(player, event, this, item, frame);
+			Shop shop = instance.getShops().getShop(b);
+			if (shop == null) {
+				boolean result = ShopCreate.handle(player, frame, b, event, this);
+				event.setCancelled(result);
 			} else {
-				if (Utils.hasPermission("nerodungeons.buy", player)) {
-					Shop shop = instance.getShops().getShop(b);
-					if(shop != null) {
-						ShopBuy.buy(player, shop);
-					}
-				}
-				System.out.println("system3");
+				ShopBuy.buy(player, shop, frame, instance.getEconomy());
 				event.setCancelled(true);
 			}
 		}
@@ -115,34 +112,30 @@ public class ShopInteract implements Listener {
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		Block block = event.getClickedBlock();
 		Player player = event.getPlayer();
-		Material itemInHand = player.getInventory().getItemInMainHand().getType();
 
 		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getPlayer().isSneaking()
-				&& Utils.hasPermission("nerodungeons.createshop", player)) {
+				&& PlayerUtil.hasPermission("nerodungeons.createshop", player)) {
 			if (block.getType() == Material.CHEST) {
 				ShopCreate creator = instance.getShops().getShopInteractions().getCreator(player);
-				if (creator != null && creator.waitingForChest()) {
-					boolean adminShop = itemInHand.equals(Material.BLAZE_ROD)
-							&& Utils.hasPermission("nerodungeons.admin", player);
+				if (creator != null && creator.waitingForChest() && !creator.getAdminShop()) {
 					Location chestLocation = block.getLocation();
 					creator.setChestLocation(chestLocation);
-					if (adminShop) {
-						creator.setAdminShop(true);
-						Utils.sendMessage("Admin shop selected", ChatColor.GOLD, player);
-					} else {
-						Utils.sendMessage("Chest selected", ChatColor.DARK_PURPLE, player);
-					}
-					System.out.println("system2");
+					Output.sendMessage("Chest selected", ChatColor.DARK_PURPLE, player);
+					event.setCancelled(true);
+				} else if (creator != null && creator.getAdminShop()) {
+					Output.sendMessage("You do not need to select a chest for an admin shop", ChatColor.DARK_BLUE,
+							player);
 					event.setCancelled(true);
 				}
 			}
 		} else if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
 			if (block.getType() == Material.CHEST) {
-				System.out.println("destroy9");
 				Shop shop = instance.getShops().getShopByChest(block);
 				if (shop != null) {
-					System.out.println("system3");
-					event.setCancelled(ShopDestroy.destroy(player, shop, instance) == false);
+					if(shop.getUUID().equals(player.getUniqueId()) && PlayerUtil.canBuild(shop.getChestLocation(), player)) {
+						ShopDestroy.destroy(shop);
+					}
+					event.setCancelled(true);
 				}
 			}
 		}
@@ -160,6 +153,13 @@ public class ShopInteract implements Listener {
 	}
 
 	public void removeShopCreator(Player player) {
+		removeShopCreator(player, true);
+	}
+
+	public void removeShopCreator(Player player, boolean notify) {
+		if (notify) {
+			Output.sendMessage("Cancelled shop creation", ChatColor.RED, player);
+		}
 		creators.remove(player);
 	}
 

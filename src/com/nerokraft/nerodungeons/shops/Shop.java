@@ -10,11 +10,13 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import com.google.gson.annotations.Expose;
+import com.nerokraft.nerodungeons.utils.Items;
 
 public class Shop {
 	private transient UUID uuid;
 	private transient Material material;
 	private transient World worldObj;
+	private transient NeroShop inst;
 	private String owner;
 
 	@Expose
@@ -31,7 +33,8 @@ public class Shop {
 	private boolean adminShop = false;
 	private Currency currency;
 
-	public Shop setup(String owner, UUID uuid) {
+	public Shop setup(String owner, UUID uuid, NeroShop inst) {
+		this.inst = inst;
 		this.worldObj = Bukkit.getWorld(world);
 		this.uuid = uuid;
 		this.owner = owner;
@@ -50,7 +53,7 @@ public class Shop {
 	}
 
 	public Shop(Location frame, Location chest, UUID uuid, String owner, Material material, double cost, int amount,
-			boolean adminShop, Currency currency) {
+			boolean adminShop, Currency currency, NeroShop shops) {
 		this.x = frame.getX();
 		this.y = frame.getY();
 		this.z = frame.getZ();
@@ -61,6 +64,7 @@ public class Shop {
 		this.world = worldObj.getName();
 		this.amount = amount;
 		this.adminShop = adminShop;
+		this.inst = shops;
 		if(chest != null) {
 			this.setChestLocation(chest);
 		}
@@ -71,6 +75,10 @@ public class Shop {
 					+ " selling " + this.getID() + " for " + cost + " reward points");
 		}
 
+	}
+	
+	public NeroShop getShops() {
+		return this.inst;
 	}
 	
 	public void setCurrency(Currency currency) {
@@ -135,11 +143,18 @@ public class Shop {
 	}
 
 	public String getID() {
+		if(this.getMaterial() == null) {
+			return null;
+		}
 		return this.getMaterial().name();
+	}
+	
+	public String getName() {
+		return Items.getName(this.getID());
 	}
 
 	public void setCost(double cost) {
-		this.cost = cost;
+		this.cost = Math.ceil(cost * amount);
 	}
 
 	public double getCost() {

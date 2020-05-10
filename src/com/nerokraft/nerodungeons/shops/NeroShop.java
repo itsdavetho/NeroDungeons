@@ -24,7 +24,7 @@ import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.nerokraft.nerodungeons.NeroDungeons;
 import com.nerokraft.nerodungeons.events.shops.ShopInteract;
-import com.nerokraft.nerodungeons.utils.Utils;
+import com.nerokraft.nerodungeons.utils.Config;
 
 public class NeroShop {
 	private NeroDungeons instance = null;
@@ -42,7 +42,9 @@ public class NeroShop {
 	}
 	
 	public void addShop(Shop shop) {
-		shops.put(shop.getBlock(), shop);
+		if(shop != null) {
+			shops.put(shop.getBlock(), shop);
+		}
 	}
 
 	public void removeShop(Shop shop) {
@@ -59,10 +61,10 @@ public class NeroShop {
 		}
 		return null;
 	}
-	
+
 	public Shop getShopByChest(Block block) {
 		if(block.getType().equals(Material.CHEST)) {
-			for(Shop s : shops.values()) {
+			for(Shop s : getRoster().values()) {
 				if(s.getChestLocation().equals(block.getLocation())) {
 					return s;
 				}
@@ -81,14 +83,14 @@ public class NeroShop {
 		HashMap<Block, Shop> roster = getRoster();
 		JsonObject json = new JsonObject();
 		json.addProperty("owner", p.getName());
-		JsonArray shops = new JsonArray();
+		JsonArray jsonShops = new JsonArray();
 		for (Shop s : roster.values()) {
 			if (s.getUUID().equals(p.getUniqueId())) {
 				JsonElement j = gson.toJsonTree(s, Shop.class);
-				shops.add(j);
+				jsonShops.add(j);
 			}
 		}
-		json.add("shops", shops);
+		json.add("shops", jsonShops);
 		try {
 			try (Writer writer = new BufferedWriter(new OutputStreamWriter(
 		              new FileOutputStream(path), "utf-8"))) {
@@ -103,34 +105,32 @@ public class NeroShop {
 	}
 
 	private void loadShops() {
-		File[] files = Utils.getConfigs("shops", instance, "");
-		System.out.println(files);
+		File[] files = Config.getConfigs("shops", instance, "");
 		for (File f : files) {
 			try {
 				String filename = f.getName();
 				UUID uuid = UUID.fromString(f.getName());
-				System.out.println(filename + " file ");
 				if (uuid == null) {
 					Bukkit.getLogger().warning("All shop filenames must be UUIDs. Skipped " + filename);
 					continue;
 				}
 				String path = instance.getDataFolder() + "/shops/" + filename;
-				System.out.println(path + " path " );
 				BufferedReader br = new BufferedReader(new FileReader(path));
 				Gson gson = new Gson();
 				JsonObject data = gson.fromJson(br, JsonObject.class);
 				String owner = data.get("owner").getAsString();
 				JsonArray shopsArray = data.getAsJsonArray("shops");
-				System.out.println("Shop data " + shopsArray);
 				for (JsonElement e : shopsArray) {
-					Shop s = gson.fromJson(e, Shop.class).setup(owner, uuid);
-					System.out.println("shop " + s + " aaa");
+					Shop s = gson.fromJson(e, Shop.class).setup(owner, uuid, this);
 					addShop(s);
 				}
+				br.close();
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (NullPointerException e) {
 				e.printStackTrace();
+			} catch (IOException e1) {
+				e1.printStackTrace();
 			}
 		}
 	}

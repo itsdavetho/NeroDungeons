@@ -1,17 +1,19 @@
 package com.nerokraft.nerodungeons.events.shops;
 
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import com.nerokraft.nerodungeons.NeroDungeons;
 import com.nerokraft.nerodungeons.shops.Currency;
 import com.nerokraft.nerodungeons.shops.Shop;
-import com.nerokraft.nerodungeons.utils.Utils;
+import com.nerokraft.nerodungeons.utils.Items;
+import com.nerokraft.nerodungeons.utils.Output;
+import com.nerokraft.nerodungeons.utils.PlayerUtil;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -20,38 +22,33 @@ import net.md_5.bungee.api.chat.TextComponent;
 public class ShopCreate extends Shop {
 	private Player player;
 	private ItemFrame frame;
-	private NeroDungeons instance;
+	private final NeroDungeons plugin;
 
 	public ShopCreate(Player player, ItemFrame frame, NeroDungeons instance) {
 		super(frame.getLocation(), null, player.getUniqueId(), player.getName(), null, -1, -1, false,
-				Currency.REWARD_POINTS);
+				Currency.REWARD_POINTS, instance.getShops());
 		this.player = player;
 		this.frame = frame;
-		this.instance = instance;
-		selectItem();
+		this.plugin = instance;
+		this.informPlayer();
 	}
 
-	public void selectItem() {
+	public void informPlayer() {
 		player.sendMessage("Shop editing mode entered.");
 		player.sendMessage("Place an item on the frame to proceed");
 		player.sendMessage("Right click while sneaking to cancel");
 	}
 
-	public boolean waitingForItem() {
-		return (super.getMaterial() == null);
-	}
-
-	public boolean waitingForChest() {
-		return (super.getChest().getType().equals(Material.CHEST)) == false;
-	}
-
-	public void initialize(PlayerInteractEntityEvent event, ShopInteract shopInteract) {
+	public void updateItem(ShopInteract shopInteract) {
 		boolean creatingShop = shopInteract.isCreating(player);
 		if (creatingShop) {
 			Material itemInHand = player.getInventory().getItemInMainHand().getType();
-			if (waitingForItem() && itemInHand != null) {
+			if (itemInHand != null && itemInHand != Material.AIR) {
+				ItemMeta meta = player.getInventory().getItemInMainHand().getItemMeta();
 				ItemStack stack = new ItemStack(itemInHand, 1);
-				Utils.sendMessage("Set item to " + stack.getItemMeta().getDisplayName(), ChatColor.GREEN, player);
+				stack.setItemMeta(meta);
+				Output.sendMessage("Set item to " + Items.getName(itemInHand.name()), ChatColor.GREEN, player);
+				Items.removeFromInventory(stack, 1, player.getInventory());
 				super.setMaterial(stack.getType());
 				frame.setItem(stack);
 				TextComponent t = new TextComponent(
@@ -61,40 +58,64 @@ public class ShopCreate extends Shop {
 				player.spigot().sendMessage(t);
 			}
 		}
-		event.setCancelled(true);
 	}
 
+	public static boolean handle(Player player, ItemFrame frame, Block b, PlayerInteractEntityEvent event, ShopInteract si) {
+		boolean canCreateShop = PlayerUtil.hasPermission("nerodungeons.createshop", player) && PlayerUtil.canBuild(b.getLocation(), player);
+		if(!canCreateShop) {
+			return false;
+		}
+		boolean sneaking = player.isSneaking();
+		ShopCreate creator = si.getCreator(player);
+		if(creator == null && sneaking) {
+			creator = si.addShopCreator(player, frame);
+			return true;
+		} else if(creator != null) {
+			Material itemInHand = player.getInventory().getItemInMainHand().getType();
+			boolean editAdminShop = itemInHand.equals(Material.BLAZE_ROD)
+					&& PlayerUtil.hasPermission("nerodungeons.admin", player);
+			if(editAdminShop && sneaking) {
+				creator.setAdminShop(!creator.getAdminShop());
+				String type = creator.getAdminShop() ? "an admin" : "a regular";
+				ChatColor color = creator.getAdminShop() ? ChatColor.GOLD : ChatColor.BLUE;
+				Output.sendMessage("Creating " + type + " shop", color, player);
+				return true;
+			} else if(!editAdminShop && sneaking) {
+				si.removeShopCreator(player);
+				return false;
+			} else if(!sneaking) {
+				creator.updateItem(si);
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	public void insertShop() {
 		if (super.getAmount() > 0 && super.getCost() > 0) {
-			Block block = player.getWorld().getBlockAt(super.getFrameLocation());
-			Location loca = super.getChestLocation();
-			System.out.println(loca);
-			Shop shop = new Shop(block.getLocation(), loca, player.getUniqueId(), player.getName(), super.getMaterial(),
-					super.getCost(), super.getAmount(), super.getAdminShop(), super.getCurrency());
-			this.getInstance().getShops().addShop(shop);
-			getInstance().getShops().getShopInteractions().removeShopCreator(player);
-			this.instance = null;
+			if(super.getMaterial() == null) { // why would this happen ? this should prevent it anyways.
+				super.setMaterial(Material.COBBLESTONE);
+			}
+			Shop shop = new Shop(super.getFrameLocation(), super.getChestLocation(), player.getUniqueId(), player.getName(),
+					super.getMaterial(), super.getCost(), super.getAmount(), super.getAdminShop(), super.getCurrency(), getPlugin().getShops());
+			this.getPlugin().getShops().addShop(shop);
+			Output.sendMessage("Shop created", ChatColor.GREEN, player);
+			this.getPlugin().getShops().getShopInteractions().removeShopCreator(player, false);
 			this.player = null;
 			this.frame = null;
 		}
 	}
-
-	private NeroDungeons getInstance() {
-		return this.instance;
+	
+	private NeroDungeons getPlugin() {
+		return this.plugin;
+	}
+	
+	public boolean waitingForItem() {
+		return (super.getMaterial() == null);
 	}
 
-	public static void toggleCreator(Player player, PlayerInteractEntityEvent event, ShopInteract inst, ItemStack item,
-			ItemFrame frame) {
-		if (!inst.isCreating(player) && player.isSneaking()) {
-			inst.addShopCreator(player, frame);
-			event.setCancelled(true);
-		} else if (inst.isCreating(player)) {
-			if (player.isSneaking()) {
-				inst.removeShopCreator(player);
-				event.setCancelled(true);
-			} else {
-				inst.getCreator(player).initialize(event, inst);
-			}
-		}
+	public boolean waitingForChest() {
+		return ((super.getChest().getType().equals(Material.CHEST)) == false) && this.getAdminShop() == false;
 	}
 }
