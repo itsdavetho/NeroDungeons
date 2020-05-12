@@ -1,6 +1,7 @@
 package com.nerokraft.nerodungeons.events.shops;
 
 import java.util.HashMap;
+import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -19,6 +20,8 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import com.nerokraft.nerodungeons.NeroDungeons;
+import com.nerokraft.nerodungeons.holograms.Hologram;
+import com.nerokraft.nerodungeons.shops.Currency;
 import com.nerokraft.nerodungeons.shops.Shop;
 import com.nerokraft.nerodungeons.utils.Output;
 import com.nerokraft.nerodungeons.utils.PlayerUtil;
@@ -42,8 +45,10 @@ public class ShopInteract implements Listener {
 			if (s != null) {
 				ShopDestroy.destroy(s);
 				event.setCancelled(true);
-			} else if(creators.containsKey(player) && creators.get(player).getFrameLocation().equals(event.getEntity().getLocation())) {
+			} else if (creators.containsKey(player)
+					&& creators.get(player).getFrameLocation().equals(event.getEntity().getLocation())) {
 				this.removeShopCreator(player, true);
+				event.setCancelled(true);
 			}
 		}
 	}
@@ -81,7 +86,8 @@ public class ShopInteract implements Listener {
 			Shop shop = instance.getShops().getShop(block);
 			if (event.getRemover() instanceof Player && shop != null) {
 				Player player = (Player) event.getRemover();
-				if(shop.getUUID().equals(player.getUniqueId()) && PlayerUtil.canBuild(shop.getFrameLocation(), player)) {
+				if (shop.getUUID().equals(player.getUniqueId())
+						&& PlayerUtil.canBuild(shop.getFrameLocation(), player)) {
 					cancel = ShopDestroy.destroy(shop);
 				}
 			}
@@ -92,7 +98,7 @@ public class ShopInteract implements Listener {
 
 	@EventHandler
 	public void onPlayerEntityInteract(PlayerInteractEntityEvent event) {
-		Player player = event.getPlayer();
+		final Player player = event.getPlayer();
 		final Entity entity = event.getRightClicked();
 		if (entity instanceof ItemFrame) {
 			final ItemFrame frame = (ItemFrame) entity;
@@ -102,7 +108,34 @@ public class ShopInteract implements Listener {
 				boolean result = ShopCreate.handle(player, frame, b, event, this);
 				event.setCancelled(result);
 			} else {
+				ShopGui gui = new ShopGui(this.instance, frame, player);
+				gui.show();
 				ShopBuy.buy(player, shop, frame, instance.getEconomy());
+				Location l = shop.getFrameLocation();
+				String currencyName = shop.getCurrency() == Currency.REWARD_POINTS ? "reward points" : "gold";
+				String text = shop.getName() + ": " + shop.getAmount() + " for " + shop.getCost() + " " + currencyName;
+				try {
+					Set<Hologram> hs = instance.getHolograms().getHolograms();
+					for (Hologram h : hs) {
+						h.hide(player);
+					}
+					l = PlayerUtil.nudgeForward(0.23, frame, l);
+					final Hologram h = instance.getHolograms().createHologram(l, text);
+					h.show(player);
+					Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(instance, new Runnable() {
+						@Override
+						public void run() {
+							try {
+								h.hide(player);
+							} catch (Exception e) {
+								Output.sendDebug(e.getMessage(), ChatColor.RED, player);
+								e.printStackTrace();
+							}
+						}
+					}, (20l * 3l));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 				event.setCancelled(true);
 			}
 		}
@@ -120,10 +153,10 @@ public class ShopInteract implements Listener {
 				if (creator != null && creator.waitingForChest() && !creator.getAdminShop()) {
 					Location chestLocation = block.getLocation();
 					creator.setChestLocation(chestLocation);
-					Output.sendMessage("Chest selected", ChatColor.DARK_PURPLE, player);
+					Output.sendMessage(instance.getMessages().getString("ShopChestSelected"), ChatColor.DARK_PURPLE, player);
 					event.setCancelled(true);
 				} else if (creator != null && creator.getAdminShop()) {
-					Output.sendMessage("You do not need to select a chest for an admin shop", ChatColor.DARK_BLUE,
+					Output.sendMessage(instance.getMessages().getString("AdminShopNoChest"), ChatColor.DARK_BLUE,
 							player);
 					event.setCancelled(true);
 				}
@@ -132,7 +165,8 @@ public class ShopInteract implements Listener {
 			if (block.getType() == Material.CHEST) {
 				Shop shop = instance.getShops().getShopByChest(block);
 				if (shop != null) {
-					if(shop.getUUID().equals(player.getUniqueId()) && PlayerUtil.canBuild(shop.getChestLocation(), player)) {
+					if (shop.getUUID().equals(player.getUniqueId())
+							&& PlayerUtil.canBuild(shop.getChestLocation(), player)) {
 						ShopDestroy.destroy(shop);
 					}
 					event.setCancelled(true);
@@ -158,7 +192,7 @@ public class ShopInteract implements Listener {
 
 	public void removeShopCreator(Player player, boolean notify) {
 		if (notify) {
-			Output.sendMessage("Cancelled shop creation", ChatColor.RED, player);
+			Output.sendMessage(instance.getMessages().getString("ShopCreatorCancelled"), ChatColor.RED, player);
 		}
 		creators.remove(player);
 	}

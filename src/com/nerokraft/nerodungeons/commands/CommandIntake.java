@@ -9,10 +9,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.nerokraft.nerodungeons.NeroDungeons;
+import com.nerokraft.nerodungeons.utils.Output;
+
+import net.md_5.bungee.api.ChatColor;
 
 public class CommandIntake implements CommandExecutor {
-	final NeroDungeons instance;
-	private HashMap<Player, String[]> players = new HashMap<Player, String[]>();
+	private final NeroDungeons instance;
+	private HashMap<CommandSender, String[]> senders = new HashMap<CommandSender, String[]>();
 
 	public CommandIntake(NeroDungeons plugin) {
 		instance = plugin;
@@ -20,31 +23,44 @@ public class CommandIntake implements CommandExecutor {
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-		
-		if (!(sender instanceof Player)) {
-			Bukkit.getLogger().info("This command cannot be executed from the console. Sorry!");
-			return false;
-		}
-		addPlayer((Player) sender, args);
-		if (args[0].equalsIgnoreCase("cs") || args[0].equalsIgnoreCase("createshop")) {
-			new CommandCreateShop(this, (Player) sender);
+		if (args.length > 0) {
+			args[0] = args[0].toLowerCase();
+			addSender(sender, args);
+			switch (args[0]) {
+			case "cs":
+				new CommandCreateShop(this, sender);
+				break;
+			case "hologram":
+				new CommandCreateHologram(this, sender);
+				break;
+			}
+			return true;
 		}
 		return false;
 	}
 
-	public NeroDungeons getPlugin () {
+	public NeroDungeons getPlugin() {
 		return instance;
 	}
-	
-	public void addPlayer(Player p, String[] args) {
-		players.put(p, args);
+
+	public void addSender(CommandSender sender, String[] args) {
+		senders.put(sender, args);
 	}
-	
+
 	public String[] getArgs(Player p) {
-		return players.get(p);
+		return senders.get(p);
 	}
 
 	public void clearPlayer(Player p) {
-		players.remove(p);
+		senders.remove(p);
+	}
+
+	public void hintCommandSyntax(String string, CommandSender sender) {
+		string = getPlugin().getMessages().getString("CommandSyntaxHint") + ": " + string;
+		if (sender instanceof Player) {
+			Output.sendMessage(string, ChatColor.RED, (Player) sender);
+		} else {
+			Bukkit.getLogger().warning(string);
+		}
 	}
 }

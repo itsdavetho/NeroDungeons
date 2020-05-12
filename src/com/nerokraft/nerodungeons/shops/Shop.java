@@ -94,6 +94,10 @@ public class Shop {
 	}
 
 	public Block getBlock() {
+		if(getFrameLocation() == null || worldObj == null || worldObj.getBlockAt(getFrameLocation()) == null) {
+			Bukkit.getLogger().warning("[NeroShop] getBlock null");
+			return null;
+		}
 		return worldObj.getBlockAt(getFrameLocation());
 	}
 

@@ -1,5 +1,7 @@
 package com.nerokraft.nerodungeons.commands;
 
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.nerokraft.nerodungeons.events.shops.ShopCreate;
@@ -10,13 +12,18 @@ import com.nerokraft.nerodungeons.utils.PlayerUtil;
 import net.md_5.bungee.api.ChatColor;
 
 public class CommandCreateShop {
-	public CommandCreateShop(CommandIntake intake, Player player) {
+	public CommandCreateShop(CommandIntake intake, CommandSender sender) {
+		if (!(sender instanceof Player)) {
+			Bukkit.getLogger().info(intake.getPlugin().getMessages().getString("CommandNotConsole"));
+			return;
+		}
+		Player player = (Player) sender;
 		if (PlayerUtil.hasPermission("nerodungeons.createshop", player)) {
 			String[] args = intake.getArgs(player);
 			if (args.length > 2) {
 				ShopCreate creator = intake.getPlugin().getShops().getShopInteractions().getCreator(player);
 				if (creator == null) {
-					Output.sendMessage("You are not editing any shops!", ChatColor.RED, player);
+					Output.sendMessage(intake.getPlugin().getMessages().getString("ShopNotEditing"), ChatColor.RED, player);
 					return;
 				}
 				Currency currency = Currency.REWARD_POINTS;
@@ -31,7 +38,7 @@ public class CommandCreateShop {
 						currency = Currency.ECONOMY;
 						break;
 					default:
-						player.sendMessage("Incorrect currency. Valid currencies: rewards, gold");
+						Output.sendMessage(intake.getPlugin().getMessages().getString("ShopInvalidCurrency"), ChatColor.RED, player);
 						return;
 					}
 				}
@@ -39,11 +46,11 @@ public class CommandCreateShop {
 					int amount = Integer.parseInt(args[1]);
 					double cost = Double.parseDouble(args[2]);
 					if (amount <= 0) {
-						Output.sendMessage("Amount must be more than zero", ChatColor.RED, player);
+						Output.sendMessage(intake.getPlugin().getMessages().getString("ShopAmountZero"), ChatColor.RED, player);
 						return;
 					}
 					if (cost <= 0) {
-						Output.sendMessage("Cost must be more than zero", ChatColor.RED, player);
+						Output.sendMessage(intake.getPlugin().getMessages().getString("ShopCostZero"), ChatColor.RED, player);
 						return;
 					}
 					creator.setAmount(amount);
@@ -52,13 +59,15 @@ public class CommandCreateShop {
 					creator.insertShop();
 					intake.getPlugin().getShops().saveShops(player);
 				} else if (creator != null && creator.waitingForChest() == true) {
-					Output.sendMessage("You still need to select a chest", ChatColor.BLUE, player);
+					Output.sendMessage(intake.getPlugin().getMessages().getString("ShopSelectChest"), ChatColor.BLUE, player);
 				} else if(creator != null && creator.waitingForItem() == true) {
-					Output.sendMessage("You still need to set an item in the frame!", ChatColor.RED, player);
+					Output.sendMessage(intake.getPlugin().getMessages().getString("ShopSelectItem"), ChatColor.RED, player);
 				}
 			} else {
-				Output.sendMessage("Correct syntax: /nd cs [amount] [cost-each]", ChatColor.RED, player);
+				Output.sendMessage(intake.getPlugin().getMessages().getString("CommandSyntaxHint") + ": /nd cs [###] [$$$]", ChatColor.RED, player);
 			}
+		} else { 
+			Output.sendMessage(intake.getPlugin().getMessages().getString("CommandLackPermission"), ChatColor.RED, player);
 		}
 	}
 }

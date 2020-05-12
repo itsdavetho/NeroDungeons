@@ -20,4 +20,10 @@ public class Output {
 		}
 	}
 
+	public static void sendDebug(String message, ChatColor color, Player player) {
+		if (PlayerUtil.hasPermission("nerodungeons.debug", player)) {
+			sendMessage(message, color, player);
+		}
+	}
+
 }

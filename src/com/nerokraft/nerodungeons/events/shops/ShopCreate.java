@@ -44,6 +44,7 @@ public class ShopCreate extends Shop {
 		if (creatingShop) {
 			Material itemInHand = player.getInventory().getItemInMainHand().getType();
 			if (itemInHand != null && itemInHand != Material.AIR) {
+				ItemStack onFrame = frame.getItem();
 				ItemMeta meta = player.getInventory().getItemInMainHand().getItemMeta();
 				ItemStack stack = new ItemStack(itemInHand, 1);
 				stack.setItemMeta(meta);
@@ -55,6 +56,7 @@ public class ShopCreate extends Shop {
 						"[NeroShop] Click here or type /nd cs <amount> <cost-each> [money] to finish configuring");
 				t.setColor(ChatColor.BLUE);
 				t.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/nd cs 1 "));
+				player.getInventory().addItem(onFrame);
 				player.spigot().sendMessage(t);
 			}
 		}

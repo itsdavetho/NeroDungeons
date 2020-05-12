@@ -36,6 +36,10 @@ public class NeroShop {
 		this.shopInteract = shopInteract;
 		loadShops();
 	}
+	
+	public NeroDungeons getPlugin() {
+		return this.instance;
+	}
 
 	public ShopInteract getShopInteractions() {
 		return shopInteract;

@@ -24,47 +24,29 @@ public class ShopBuy {
 			return;
 		}
 		Location shopLocation = frame.getLocation();
-		double x = shopLocation.getX();
-		double z = shopLocation.getZ();
-		switch (frame.getFacing()) {
-		case NORTH:
-			z -= 0.2;
-			break;
-		case SOUTH:
-			z += 0.2;
-			break;
-		case WEST:
-			x -= 0.2;
-			break;
-		case EAST:
-			x += 0.2;
-			break;
-		default:
-			break;
-		}
-
-		Location fwdOfShop = new Location(shopLocation.getWorld(), x, shopLocation.getY(), z);
+		Location fwdOfShop = PlayerUtil.nudgeForward(0.23, frame, shopLocation);
 
 		if (!PlayerUtil.hasPermission("nerodungeons.buy", customer)) {
-			Output.sendMessage("You are not permitted to buy items from this store.", ChatColor.YELLOW, customer);
-			shopLocation.getWorld().spawnParticle(Particle.BARRIER, fwdOfShop, 1);
-			customer.playSound(shopLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 2f);
-			return;
-		} else if (shop.getUUID().equals(customer.getUniqueId())
-				&& !PlayerUtil.hasPermission("nerodungeons.buy.own", customer)) {
-			Output.sendMessage("You can't buy your own item!", ChatColor.RED, customer);
+			Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNoPermission"),
+					ChatColor.YELLOW, customer);
 			shopLocation.getWorld().spawnParticle(Particle.BARRIER, fwdOfShop, 1);
 			customer.playSound(shopLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 2f);
 			return;
 		}
 		String currencyName = shop.getCurrency() == Currency.REWARD_POINTS ? "reward points" : "gold";
 		String msg = shop.getAmount() + "x" + shop.getName() + " (" + shop.getCost() + " " + currencyName + ")";
-		if (!customer.isSneaking()) {
-			Output.sendMessage("[" + shop.getOwner() + "] " + msg, ChatColor.DARK_GREEN, customer);
-		} else {
+		if (customer.isSneaking()) {
+			if (shop.getUUID().equals(customer.getUniqueId())
+					&& !PlayerUtil.hasPermission("nerodungeons.buy.own", customer)) {
+				Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopBuyOwn"), ChatColor.RED,
+						customer);
+				shopLocation.getWorld().spawnParticle(Particle.BARRIER, fwdOfShop, 1);
+				customer.playSound(shopLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 2f);
+				return;
+			}
 			if (Items.invSpace(customer.getInventory(), shop.getMaterial()) < shop.getAmount()) {
-				Output.sendMessage("You should clear some space in your inventory before buying something.",
-						ChatColor.RED, customer);
+				Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNeedRoom"), ChatColor.RED,
+						customer);
 				shopLocation.getWorld().spawnParticle(Particle.BARRIER, fwdOfShop, 1);
 				customer.playSound(shopLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 2f);
 				return;
@@ -77,7 +59,8 @@ public class ShopBuy {
 			if (shop.getCost() > customerWallet && !PlayerUtil.hasPermission("nerodungeons.nomoney", customer)) {
 				shopLocation.getWorld().spawnParticle(Particle.FALLING_WATER, aboveHead, 50, 0.25, 0.25, 0.25);
 				customer.playSound(customer.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
-				Output.sendMessage("Sorry, you don't have enough funds to purchase this!", ChatColor.RED, customer);
+				Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNeedMoney"), ChatColor.RED,
+						customer);
 				return;
 			} else {
 				Player owner = shop.getPlayer();
@@ -89,11 +72,11 @@ public class ShopBuy {
 					ItemStack stack = new ItemStack(shop.getMaterial());
 					if (!shopInv.containsAtLeast(stack, shop.getAmount())) {
 						if (owner.isOnline()) {
-							Output.sendMessage("You need to restock your " + shop.getName() + " shop",
-									ChatColor.LIGHT_PURPLE, owner);
+							Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNeedStock")
+									.replaceAll("%s", shop.getName()), ChatColor.LIGHT_PURPLE, owner);
 						}
-						Output.sendMessage("Sorry, but that shop is currently out of stock!", ChatColor.DARK_AQUA,
-								customer);
+						Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNoStock"),
+								ChatColor.DARK_AQUA, customer);
 						shopLocation.getWorld().spawnParticle(Particle.FALLING_WATER, aboveHead, 50, 0.25, 0.25, 0.25);
 						customer.playSound(customer.getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 1.0f, 1.0f);
 						return;
@@ -117,10 +100,14 @@ public class ShopBuy {
 				if (sold) {
 					boolean buySelf = customer.getUniqueId().equals(owner.getUniqueId());
 					if (!buySelf) {
-						Output.sendMessage("Bought " + msg, ChatColor.BLUE, customer);
+						Output.sendMessage(
+								shop.getShops().getPlugin().getMessages().getString("ShopBought") + " " + msg,
+								ChatColor.BLUE, customer);
 					}
 					if (owner.isOnline()) {
-						Output.sendMessage(customer.getName() + " bought " + msg, ChatColor.GREEN, owner);
+						Output.sendMessage(customer.getName() + " "
+								+ shop.getShops().getPlugin().getMessages().getString("ShopBought").toLowerCase() + " "
+								+ msg, ChatColor.GREEN, owner);
 					}
 					ItemStack stack = new ItemStack(shop.getMaterial(), shop.getAmount());
 					stack.setItemMeta(frame.getItem().getItemMeta());

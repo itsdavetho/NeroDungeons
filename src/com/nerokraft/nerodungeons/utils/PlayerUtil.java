@@ -2,6 +2,7 @@ package com.nerokraft.nerodungeons.utils;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
@@ -55,5 +56,27 @@ public class PlayerUtil {
 			Output.sendMessage("Sorry! You must choose inside a claim that you own", ChatColor.RED, player);
 		}
 		return false;
+	}
+	
+	public static Location nudgeForward(double amount, Entity o, Location l) {
+		double x = l.getX();
+		double z = l.getZ();
+		switch (o.getFacing()) {
+		case NORTH:
+			z -= amount;
+			break;
+		case SOUTH:
+			z += amount;
+			break;
+		case WEST:
+			x -= amount;
+			break;
+		case EAST:
+			x += amount;
+			break;
+		default:
+			break;
+		}
+		return new Location(l.getWorld(), x, l.getY(), z);
 	}
 }
