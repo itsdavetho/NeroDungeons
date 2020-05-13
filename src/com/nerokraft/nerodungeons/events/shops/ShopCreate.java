@@ -26,11 +26,12 @@ public class ShopCreate extends Shop {
 
 	public ShopCreate(Player player, ItemFrame frame, NeroDungeons instance) {
 		super(frame.getLocation(), null, player.getUniqueId(), player.getName(), null, -1, -1, false,
-				Currency.REWARD_POINTS, instance.getShops());
+				Currency.REWARD_POINTS, instance.getShops(), true);
 		this.player = player;
 		this.frame = frame;
 		this.plugin = instance;
 		this.informPlayer();
+
 	}
 
 	public void informPlayer() {
@@ -62,45 +63,57 @@ public class ShopCreate extends Shop {
 		}
 	}
 
-	public static boolean handle(Player player, ItemFrame frame, Block b, PlayerInteractEntityEvent event, ShopInteract si) {
-		boolean canCreateShop = PlayerUtil.hasPermission("nerodungeons.createshop", player) && PlayerUtil.canBuild(b.getLocation(), player);
-		if(!canCreateShop) {
+	public static boolean handle(Player player, ItemFrame frame, Block b, PlayerInteractEntityEvent event,
+			ShopInteract si) {
+		boolean canCreateShop = PlayerUtil.hasPermission("nerodungeons.createshop", player)
+				&& PlayerUtil.canBuild(b.getLocation(), player);
+		if (!canCreateShop) {
 			return false;
 		}
 		boolean sneaking = player.isSneaking();
 		ShopCreate creator = si.getCreator(player);
-		if(creator == null && sneaking) {
+		if (creator == null && sneaking) {
 			creator = si.addShopCreator(player, frame);
 			return true;
-		} else if(creator != null) {
+		} else if (creator != null) {
 			Material itemInHand = player.getInventory().getItemInMainHand().getType();
 			boolean editAdminShop = itemInHand.equals(Material.BLAZE_ROD)
 					&& PlayerUtil.hasPermission("nerodungeons.admin", player);
-			if(editAdminShop && sneaking) {
+			if (editAdminShop && sneaking) {
 				creator.setAdminShop(!creator.getAdminShop());
-				String type = creator.getAdminShop() ? "an admin" : "a regular";
+				String shopType = creator.getAdminShop() ? creator.getPlugin().getMessages().getString("ShopAdmin")
+						: creator.getPlugin().getMessages().getString("ShopRegular");
 				ChatColor color = creator.getAdminShop() ? ChatColor.GOLD : ChatColor.BLUE;
-				Output.sendMessage("Creating " + type + " shop", color, player);
+				Output.sendMessage(creator.getPlugin().getMessages().getString("ShopSetType").replace("%s", shopType),
+						color, player);
 				return true;
-			} else if(!editAdminShop && sneaking) {
+			} else if (itemInHand.equals(Material.STICK) && sneaking) {
+				creator.setCanSell(!creator.getCanSell());
+				Output.sendMessage(
+						creator.getCanSell() ? creator.getPlugin().getMessages().getString("ShopCanSell")
+								: creator.getPlugin().getMessages().getString("ShopCantSell"),
+						creator.getCanSell() ? ChatColor.GREEN : ChatColor.RED, player);
+				return true;
+			} else if (!editAdminShop && sneaking) {
 				si.removeShopCreator(player);
 				return false;
-			} else if(!sneaking) {
+			} else if (!sneaking) {
 				creator.updateItem(si);
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	public void insertShop() {
 		if (super.getAmount() > 0 && super.getCost() > 0) {
-			if(super.getMaterial() == null) { // why would this happen ? this should prevent it anyways.
+			if (super.getMaterial() == null) { // why would this happen ? this should prevent it anyways.
 				super.setMaterial(Material.COBBLESTONE);
 			}
-			Shop shop = new Shop(super.getFrameLocation(), super.getChestLocation(), player.getUniqueId(), player.getName(),
-					super.getMaterial(), super.getCost(), super.getAmount(), super.getAdminShop(), super.getCurrency(), getPlugin().getShops());
+			Shop shop = new Shop(super.getFrameLocation(), super.getChestLocation(), player.getUniqueId(),
+					player.getName(), super.getMaterial(), super.getCost(), super.getAmount(), super.getAdminShop(),
+					super.getCurrency(), getPlugin().getShops(), super.getCanSell());
 			this.getPlugin().getShops().addShop(shop);
 			Output.sendMessage("Shop created", ChatColor.GREEN, player);
 			this.getPlugin().getShops().getShopInteractions().removeShopCreator(player, false);
@@ -108,11 +121,11 @@ public class ShopCreate extends Shop {
 			this.frame = null;
 		}
 	}
-	
+
 	private NeroDungeons getPlugin() {
 		return this.plugin;
 	}
-	
+
 	public boolean waitingForItem() {
 		return (super.getMaterial() == null);
 	}

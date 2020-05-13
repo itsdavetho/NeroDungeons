@@ -8,8 +8,8 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
-import com.google.gson.annotations.Expose;
 import com.nerokraft.nerodungeons.utils.Items;
 
 public class Shop {
@@ -19,18 +19,14 @@ public class Shop {
 	private transient NeroShop inst;
 	private String owner;
 
-	@Expose
 	private double x, y, z, cx, cy, cz;
-	@Expose
 	private String world;
-	@Expose
 	private String id;
-	@Expose
 	private Double cost = 1.0;
-	@Expose
 	private int amount = 1;
-	@Expose
 	private boolean adminShop = false;
+	private boolean canSell = true;
+
 	private Currency currency;
 
 	public Shop setup(String owner, UUID uuid, NeroShop inst) {
@@ -39,7 +35,7 @@ public class Shop {
 		this.uuid = uuid;
 		this.owner = owner;
 		Location chest = new Location(worldObj, cx, cy, cz);
-		if(chest != null) {
+		if (chest != null) {
 			this.setChestLocation(chest);
 		}
 		if (Material.matchMaterial(id) != null) {
@@ -47,25 +43,24 @@ public class Shop {
 		} else {
 			Bukkit.getLogger().warning("Couldn't setup shop " + id + " " + owner);
 		}
-		System.out.println("[NeroShops] <" + owner + "> Shop at " + x + " " + y + " " + z + " on world " + world
-				+ " selling " + material.name() + " for " + cost + " reward points");
 		return this;
 	}
 
 	public Shop(Location frame, Location chest, UUID uuid, String owner, Material material, double cost, int amount,
-			boolean adminShop, Currency currency, NeroShop shops) {
+			boolean adminShop, Currency currency, NeroShop shops, boolean canSell) {
 		this.x = frame.getX();
 		this.y = frame.getY();
 		this.z = frame.getZ();
 		this.setUUID(uuid);
-		this.setOwner(owner);
+		this.setOwnerName(owner);
 		this.cost = cost;
 		this.worldObj = frame.getWorld();
 		this.world = worldObj.getName();
 		this.amount = amount;
 		this.adminShop = adminShop;
 		this.inst = shops;
-		if(chest != null) {
+		this.canSell = canSell;
+		if (chest != null) {
 			this.setChestLocation(chest);
 		}
 		this.setCurrency(currency);
@@ -74,18 +69,23 @@ public class Shop {
 			System.out.println("[NeroShops] <" + owner + "> Shop at " + x + " " + y + " " + z + " on world " + world
 					+ " selling " + this.getID() + " for " + cost + " reward points");
 		}
-
 	}
-	
+
 	public NeroShop getShops() {
 		return this.inst;
 	}
-	
+
 	public void setCurrency(Currency currency) {
 		this.currency = currency;
-	}	
-	
+	}
+
 	public void setAmount(int amount) {
+		ItemStack stack = new ItemStack(this.material);
+		int max = stack.getMaxStackSize();
+		if (amount > max) {
+			throw new RuntimeException(
+					inst.getPlugin().getMessages().getString("ShopInvalidAmount").replace("%s", "" + max));
+		}
 		this.amount = amount;
 	}
 
@@ -94,7 +94,7 @@ public class Shop {
 	}
 
 	public Block getBlock() {
-		if(getFrameLocation() == null || worldObj == null || worldObj.getBlockAt(getFrameLocation()) == null) {
+		if (getFrameLocation() == null || worldObj == null || worldObj.getBlockAt(getFrameLocation()) == null) {
 			Bukkit.getLogger().warning("[NeroShop] getBlock null");
 			return null;
 		}
@@ -109,11 +109,11 @@ public class Shop {
 		return uuid;
 	}
 
-	public void setOwner(String owner) {
+	public void setOwnerName(String owner) {
 		this.owner = owner;
 	}
 
-	public String getOwner() {
+	public String getOwnerName() {
 		return owner;
 	}
 
@@ -135,7 +135,6 @@ public class Shop {
 		this.cy = location.getY();
 		this.cz = location.getZ();
 		this.worldObj = location.getWorld();
-		System.out.println("setchestlocation " + cx + " " + cy + " " + cz);
 	}
 
 	public Location getChestLocation() {
@@ -147,12 +146,12 @@ public class Shop {
 	}
 
 	public String getID() {
-		if(this.getMaterial() == null) {
+		if (this.getMaterial() == null) {
 			return null;
 		}
 		return this.getMaterial().name();
 	}
-	
+
 	public String getName() {
 		return Items.getName(this.getID());
 	}
@@ -184,4 +183,13 @@ public class Shop {
 	public Currency getCurrency() {
 		return this.currency;
 	}
+
+	public void setCanSell(boolean canSell) {
+		this.canSell = canSell;
+	}
+	
+	public boolean getCanSell() {
+		return this.canSell;
+	}
+
 }

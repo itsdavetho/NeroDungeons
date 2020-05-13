@@ -41,6 +41,6 @@ public class Items {
 	}
 	
 	public static String getName(String id) {
-		return id.replaceAll("_", " ").toLowerCase();
+		return id.replace("_", " ").toLowerCase();
 	}
 }

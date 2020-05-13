@@ -19,6 +19,9 @@ permissions:
   nerodungeons.createshop:
     description: Allowed to make shops
     default: op
+  nerodungeons.sell:
+    description: Sell a product to a shop that will buy them
+    default: true
   nerodungeons.buy:
     description: Buy any products
     default: true
