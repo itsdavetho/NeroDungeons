@@ -11,7 +11,7 @@ import net.milkbowl.vault.economy.EconomyResponse;
 
 public class Economics {
 	private Economy eco = null;
-	private double tradeValueDecay = 5/8;
+	private double tradeValueDecay = 0.400d;
 	private double walletBufferRewards = 100;
 	private double walletBufferEconomy = 200;
 
@@ -94,7 +94,7 @@ public class Economics {
 	}
 
 	public double getValueDecay() {
-		return this.tradeValueDecay ;
+		return this.tradeValueDecay;
 	}
 	
 	public void setValueDecay(double decay) {

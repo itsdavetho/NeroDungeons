@@ -1,6 +1,7 @@
 package com.nerokraft.nerodungeons.events.shops;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Chest;
@@ -27,10 +28,14 @@ public class ShopBuy {
 		if (shop == null) {
 			return false;
 		}
+		if (frame == null || frame.getItem().getType() == Material.AIR) {
+			shop.getShops().removeShop(shop);
+			return false;
+		}
 		Location shopLocation = frame.getLocation();
 		Location fwdOfShop = PlayerUtil.nudgeForward(0.23, frame, shopLocation);
 		int totalAmount = (shop.getAmount() * quantity);
-		double totalCost = (shop.getCost() * totalAmount);
+		double totalCost = shop.getCost() * quantity;
 		if (!PlayerUtil.hasPermission("nerodungeons.buy", customer)) {
 			Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNoPermission"),
 					ChatColor.YELLOW, customer);
@@ -58,8 +63,7 @@ public class ShopBuy {
 		double customerWallet = economy.balance(customer, shop.getCurrency());
 		Location aboveHead = customer.getLocation(); // above head particles
 		aboveHead.setY(aboveHead.getY() + 2.5f);
-		if (totalCost > customerWallet
-				&& !PlayerUtil.hasPermission("nerodungeons.nomoney", customer)) {
+		if (totalCost > customerWallet && !PlayerUtil.hasPermission("nerodungeons.nomoney", customer)) {
 			customer.getWorld().spawnParticle(Particle.FALLING_WATER, aboveHead, 50, 0.25, 0.25, 0.25);
 			customer.playSound(customer.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
 			double difference = totalCost - customerWallet;
@@ -68,17 +72,6 @@ public class ShopBuy {
 			return false;
 		} else {
 			Player owner = shop.getPlayer();
-			boolean sold = PlayerUtil.hasPermission("nerodungeons.nomoney", customer);
-			if (sold == false) {
-				sold = shop.getCurrency() == Currencies.REWARD_POINTS ? economy.modifyRewards(customer, -totalCost) : economy.withdraw(customer, totalCost);
-			}				
-			if (sold && !shop.getAdminShop()) {
-				if(shop.getCurrency() == Currencies.REWARD_POINTS) {
-					economy.modifyRewards(owner, totalCost);
-				} else {
-					economy.deposit(owner, totalCost);
-				}
-			}
 			if (!shop.getAdminShop()) {
 				Chest chest = (Chest) shop.getChest().getState();
 				Inventory shopInv = chest.getInventory();
@@ -88,13 +81,31 @@ public class ShopBuy {
 						Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNeedStock")
 								.replace("%s", shop.getName()), ChatColor.LIGHT_PURPLE, owner);
 					}
-					Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNoStock"),
-							ChatColor.DARK_AQUA, customer);
-					shopLocation.getWorld().spawnParticle(Particle.FALLING_WATER, aboveHead, 50, 0.25, 0.25, 0.25);
-					customer.playSound(customer.getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 1.0f, 1.0f);
-					return false;
+					int stock = shop.getStock(shopInv, stack);
+					if (stock > 0) {
+						totalAmount = stock;
+						totalCost = (double)totalAmount * shop.getCost();
+						Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopLastStock"), ChatColor.DARK_BLUE, customer);
+					} else {
+						Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNoStock"),
+								ChatColor.DARK_AQUA, customer);
+						shopLocation.getWorld().spawnParticle(Particle.FALLING_WATER, aboveHead, 100, 0.25, 0.25, 0.25);
+						customer.playSound(customer.getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 1.0f, 1.0f);
+						return false;
+					}
+				}
+				Items.removeFromInventory(stack, totalAmount, shopInv);
+			}
+			boolean sold = PlayerUtil.hasPermission("nerodungeons.nomoney", customer);
+			if (sold == false) {
+				sold = shop.getCurrency() == Currencies.REWARD_POINTS ? economy.modifyRewards(customer, -totalCost)
+						: economy.withdraw(customer, totalCost);
+			}
+			if (sold && !shop.getAdminShop()) {
+				if (shop.getCurrency() == Currencies.REWARD_POINTS) {
+					economy.modifyRewards(owner, totalCost);
 				} else {
-					Items.removeFromInventory(stack, totalAmount, shopInv);
+					economy.deposit(owner, totalCost);
 				}
 			}
 			if (sold) {

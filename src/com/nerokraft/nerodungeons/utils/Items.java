@@ -25,7 +25,7 @@ public class Items {
 
 	public static int invSpace(Inventory inv, Material m) {
 		int count = 0;
-		for (int slot = 0; slot < 36; slot++) {
+		for (int slot = 0; slot < inv.getSize(); slot++) {
 			ItemStack is = inv.getItem(slot);
 			if (is == null) {
 				count += m.getMaxStackSize();

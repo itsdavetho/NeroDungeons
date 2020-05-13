@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.block.Chest;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -32,7 +33,6 @@ public class ShopGui implements Listener {
 		this.shop = shop;
 		this.frame = frame;
 		this.player = player;
-		shop.getShops().getPlugin().getServer().getPluginManager().registerEvents(this, shop.getShops().getPlugin());
 	}
 
 	public void show() {
@@ -42,30 +42,33 @@ public class ShopGui implements Listener {
 		title = title.length() > 27 ? title.substring(0, 24) + "..." : title;
 		title = (title + " shop");
 		this.inv = Bukkit.createInventory(null, 27, title);
-		double sellingPrice = Math.floor(shop.getCost() * (5/8));
+		double sellingPrice = (shop.getCost() * shop.getShops().getPlugin().getEconomy().getValueDecay());
+		double buyingPrice = shop.getCost();
 		ItemStack item = frame.getItem();
 		String currencyName = shop.getCurrency() == Currencies.REWARD_POINTS ? "reward points" : "gold";
 		setTile(0, new ItemStack(Material.BARRIER), "Exit", "Discontinue shopping here");
 		if (PlayerUtil.hasPermission("nerodungeons.buy.many", player)) {
 			setTile(10, new ItemStack(Material.DIAMOND), "Buy", "Buy " + shop.getAmount() * 3,
-					"(" + shop.getCost() * 3 + " " + currencyName + ")");
+					"(" + buyingPrice * 3 + " " + currencyName + ")");
 			setTile(11, new ItemStack(Material.GOLD_INGOT), "Buy", "Buy " + shop.getAmount() * 2,
-					"(" + shop.getCost() * 2 + " " + currencyName + ")");
+					"(" + buyingPrice * 2 + " " + currencyName + ")");
 		}
 		setTile(12, new ItemStack(Material.IRON_INGOT), "Buy", "Buy " + shop.getAmount() * 1,
-				"(" + shop.getCost() * 1 + " " + currencyName + ")");
+				"(" + buyingPrice * 1 + " " + currencyName + ")");
 		inv.setItem(13, item); // just use setItem, don't wish to edit the metadata
-		if(shop.getCanSell()) {
+		if (shop.getCanSell()) {
 			setTile(14, new ItemStack(Material.IRON_INGOT), "Sell", "Sell " + shop.getAmount() * 1,
-					"(" + sellingPrice * 1 + " " + currencyName + ")");
+					"(" + Math.floor(sellingPrice) + " " + currencyName + ")");
 			if (PlayerUtil.hasPermission("nerodungeons.buy.many", player)) {
 				setTile(15, new ItemStack(Material.GOLD_INGOT), "Sell", "Sell " + shop.getAmount() * 2,
-						"(" + sellingPrice * 2 + " " + currencyName + ")");
+						"(" + Math.floor(sellingPrice * 2) + " " + currencyName + ")");
 				setTile(16, new ItemStack(Material.DIAMOND), "Sell", "Sell " + shop.getAmount() * 3,
-						"(" + sellingPrice * 3 + " " + currencyName + ")");
+						"(" + Math.floor(sellingPrice * 3) + " " + currencyName + ")");
+				setTile(22, new ItemStack(Material.PAPER), "Info", "Stock: " + shop.getStock(((Chest)shop.getChest().getState()).getInventory(), frame.getItem()));
 			}
 		}
 		player.openInventory(inv);
+		shop.getShops().getPlugin().getServer().getPluginManager().registerEvents(this, shop.getShops().getPlugin());
 	}
 
 	public Shop getShop() {
@@ -86,8 +89,9 @@ public class ShopGui implements Listener {
 		Player player = (Player) e.getWhoClicked();
 		if (e.getInventory() == inventory) {
 			if (e.isLeftClick()) {
-				//Output.sendDebug(((System.currentTimeMillis() / 1000L) - lastClick) + " last click ", ChatColor.GREEN, player);
-				if((System.currentTimeMillis() / 1000L) - lastClick > 1) {
+				// Output.sendDebug(((System.currentTimeMillis() / 1000L) - lastClick) + " last
+				// click ", ChatColor.GREEN, player);
+				if ((System.currentTimeMillis() / 1000L) - lastClick > 0) {
 					int slot = e.getRawSlot();
 					Economics eco = shop.getShops().getPlugin().getEconomy();
 					switch (slot) {
@@ -114,7 +118,8 @@ public class ShopGui implements Listener {
 						break;
 					}
 				} else {
-					Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopSlowDown"), ChatColor.DARK_PURPLE, player);
+					Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopSlowDown"),
+							ChatColor.DARK_PURPLE, player);
 				}
 				lastClick = System.currentTimeMillis() / 1000L;
 			}

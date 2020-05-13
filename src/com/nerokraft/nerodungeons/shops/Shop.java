@@ -7,7 +7,9 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import com.nerokraft.nerodungeons.utils.Items;
@@ -157,11 +159,11 @@ public class Shop {
 	}
 
 	public void setCost(double cost) {
-		this.cost = Math.ceil(cost * amount);
+		this.cost = Math.floor(cost * amount);
 	}
 
 	public double getCost() {
-		return cost;
+		return Math.ceil(cost);
 	}
 
 	public Location getFrameLocation() {
@@ -187,9 +189,23 @@ public class Shop {
 	public void setCanSell(boolean canSell) {
 		this.canSell = canSell;
 	}
-	
+
 	public boolean getCanSell() {
 		return this.canSell;
+	}
+
+	public int getStock(Inventory inventory, ItemStack item) {
+		int count = 0;
+		Chest chest = (Chest) this.getChest().getState();
+		Inventory inv = chest.getInventory();
+		for (ItemStack i : inv.getContents()) {
+			if (i != null && i.getType() != Material.AIR) {
+				if (i.isSimilar(item)) {
+					count += i.getAmount();
+				}
+			}
+		}
+		return count;
 	}
 
 }
