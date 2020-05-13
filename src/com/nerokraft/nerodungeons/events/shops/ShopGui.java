@@ -64,7 +64,8 @@ public class ShopGui implements Listener {
 						"(" + Math.floor(sellingPrice * 2) + " " + currencyName + ")");
 				setTile(16, new ItemStack(Material.DIAMOND), "Sell", "Sell " + shop.getAmount() * 3,
 						"(" + Math.floor(sellingPrice * 3) + " " + currencyName + ")");
-				setTile(22, new ItemStack(Material.PAPER), "Info", "Stock: " + shop.getStock(((Chest)shop.getChest().getState()).getInventory(), frame.getItem()));
+				String stock = shop.getAdminShop() ? "~" : ""+shop.getStock( ((Chest)shop.getChest().getState()).getInventory(), frame.getItem());
+				setTile(22, new ItemStack(Material.PAPER), "Info", "Stock: " + stock);
 			}
 		}
 		player.openInventory(inv);
@@ -94,8 +95,9 @@ public class ShopGui implements Listener {
 				if ((System.currentTimeMillis() / 1000L) - lastClick > 0) {
 					int slot = e.getRawSlot();
 					Economics eco = shop.getShops().getPlugin().getEconomy();
-					if(slot > 0) {
-						setTile(22, new ItemStack(Material.PAPER), "Info", "Stock: " + shop.getStock(((Chest)shop.getChest().getState()).getInventory(), frame.getItem()));
+					if (slot > 0) {
+						String stock = shop.getAdminShop() ? "~" : ""+shop.getStock( ((Chest)shop.getChest().getState()).getInventory(), frame.getItem());
+						setTile(22, new ItemStack(Material.PAPER), "Info", "Stock: " + stock);
 					}
 					switch (slot) {
 					case 0:
