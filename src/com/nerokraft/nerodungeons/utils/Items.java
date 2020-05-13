@@ -3,7 +3,6 @@ package com.nerokraft.nerodungeons.utils;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 
 public class Items {
 	public static void removeFromInventory(ItemStack stack, int remove, Inventory inv) {
@@ -24,7 +23,7 @@ public class Items {
 		}
 	}
 
-	public static int invSpace(PlayerInventory inv, Material m) {
+	public static int invSpace(Inventory inv, Material m) {
 		int count = 0;
 		for (int slot = 0; slot < 36; slot++) {
 			ItemStack is = inv.getItem(slot);

@@ -5,7 +5,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.nerokraft.nerodungeons.events.shops.ShopCreate;
-import com.nerokraft.nerodungeons.shops.Currency;
+import com.nerokraft.nerodungeons.shops.Currencies;
 import com.nerokraft.nerodungeons.utils.Output;
 import com.nerokraft.nerodungeons.utils.PlayerUtil;
 
@@ -26,16 +26,16 @@ public class CommandCreateShop {
 					Output.sendMessage(intake.getPlugin().getMessages().getString("ShopNotEditing"), ChatColor.RED, player);
 					return;
 				}
-				Currency currency = Currency.REWARD_POINTS;
+				Currencies currency = Currencies.REWARD_POINTS;
 				if (args.length > 3) {
 					String name = args[3].toUpperCase();
 					switch (name) {
 					case "REWARDS":
-						currency = Currency.REWARD_POINTS;
+						currency = Currencies.REWARD_POINTS;
 						break;
 					case "GOLD":
 					case "ECONOMY":
-						currency = Currency.ECONOMY;
+						currency = Currencies.ECONOMY;
 						break;
 					default:
 						Output.sendMessage(intake.getPlugin().getMessages().getString("ShopInvalidCurrency"), ChatColor.RED, player);

@@ -21,7 +21,7 @@ import org.bukkit.plugin.Plugin;
 
 import com.nerokraft.nerodungeons.NeroDungeons;
 import com.nerokraft.nerodungeons.holograms.Hologram;
-import com.nerokraft.nerodungeons.shops.Currency;
+import com.nerokraft.nerodungeons.shops.Currencies;
 import com.nerokraft.nerodungeons.shops.Shop;
 import com.nerokraft.nerodungeons.utils.Output;
 import com.nerokraft.nerodungeons.utils.PlayerUtil;
@@ -116,7 +116,7 @@ public class ShopInteract implements Listener {
 	}
 
 	private void showHologram(Shop shop, Player player, ItemFrame frame) {
-		String currencyName = shop.getCurrency() == Currency.REWARD_POINTS ? "reward points" : "gold";
+		String currencyName = shop.getCurrency() == Currencies.REWARD_POINTS ? "reward points" : "gold";
 		String text = shop.getName() + " [" + shop.getCost() + " " + currencyName + " for " + shop.getAmount() + "]";
 		try {
 			final Hologram h = instance.getHolograms().createHologram(PlayerUtil.nudgeForward(0.23d, frame, frame.getLocation()), text);

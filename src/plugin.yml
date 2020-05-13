@@ -26,10 +26,10 @@ permissions:
     description: Buy any products
     default: true
   nerodungeons.buy.many:
-    description: Buy more than one set at a time
-    default: op
+    description: Buy & sell more than one set at a time
+    default: true
   nerodungeons.buy.own:
-    description: Buy own products
+    description: Buy & sell own products
     default: op
   nerodungeons.nocapital:
     description: Buy without money

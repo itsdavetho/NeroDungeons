@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import com.nerokraft.nerodungeons.NeroDungeons;
-import com.nerokraft.nerodungeons.shops.Currency;
+import com.nerokraft.nerodungeons.shops.Currencies;
 import com.nerokraft.nerodungeons.shops.Shop;
 import com.nerokraft.nerodungeons.utils.Items;
 import com.nerokraft.nerodungeons.utils.Output;
@@ -26,7 +26,7 @@ public class ShopCreate extends Shop {
 
 	public ShopCreate(Player player, ItemFrame frame, NeroDungeons instance) {
 		super(frame.getLocation(), null, player.getUniqueId(), player.getName(), null, -1, -1, false,
-				Currency.REWARD_POINTS, instance.getShops(), true);
+				Currencies.REWARD_POINTS, instance.getShops(), true);
 		this.player = player;
 		this.frame = frame;
 		this.plugin = instance;

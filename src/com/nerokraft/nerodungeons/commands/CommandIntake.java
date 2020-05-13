@@ -30,9 +30,9 @@ public class CommandIntake implements CommandExecutor {
 			case "cs":
 				new CommandCreateShop(this, sender);
 				break;
-			case "hologram":
+			/*case "hologram":
 				new CommandCreateHologram(this, sender);
-				break;
+				break;*/
 			}
 			return true;
 		}

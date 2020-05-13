@@ -27,7 +27,7 @@ public class Shop {
 	private boolean adminShop = false;
 	private boolean canSell = true;
 
-	private Currency currency;
+	private Currencies currency;
 
 	public Shop setup(String owner, UUID uuid, NeroShop inst) {
 		this.inst = inst;
@@ -47,7 +47,7 @@ public class Shop {
 	}
 
 	public Shop(Location frame, Location chest, UUID uuid, String owner, Material material, double cost, int amount,
-			boolean adminShop, Currency currency, NeroShop shops, boolean canSell) {
+			boolean adminShop, Currencies currency, NeroShop shops, boolean canSell) {
 		this.x = frame.getX();
 		this.y = frame.getY();
 		this.z = frame.getZ();
@@ -75,7 +75,7 @@ public class Shop {
 		return this.inst;
 	}
 
-	public void setCurrency(Currency currency) {
+	public void setCurrency(Currencies currency) {
 		this.currency = currency;
 	}
 
@@ -180,7 +180,7 @@ public class Shop {
 		return this.adminShop;
 	}
 
-	public Currency getCurrency() {
+	public Currencies getCurrency() {
 		return this.currency;
 	}
 

@@ -13,8 +13,9 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.nerokraft.nerodungeons.shops.Currency;
+import com.nerokraft.nerodungeons.shops.Currencies;
 import com.nerokraft.nerodungeons.shops.Shop;
+import com.nerokraft.nerodungeons.utils.Economics;
 import com.nerokraft.nerodungeons.utils.Output;
 import com.nerokraft.nerodungeons.utils.PlayerUtil;
 
@@ -43,7 +44,7 @@ public class ShopGui implements Listener {
 		this.inv = Bukkit.createInventory(null, 27, title);
 		double sellingPrice = Math.floor(shop.getCost() * (5/8));
 		ItemStack item = frame.getItem();
-		String currencyName = shop.getCurrency() == Currency.REWARD_POINTS ? "reward points" : "gold";
+		String currencyName = shop.getCurrency() == Currencies.REWARD_POINTS ? "reward points" : "gold";
 		setTile(0, new ItemStack(Material.BARRIER), "Exit", "Discontinue shopping here");
 		if (PlayerUtil.hasPermission("nerodungeons.buy.many", player)) {
 			setTile(10, new ItemStack(Material.DIAMOND), "Buy", "Buy " + shop.getAmount() * 3,
@@ -88,27 +89,28 @@ public class ShopGui implements Listener {
 				//Output.sendDebug(((System.currentTimeMillis() / 1000L) - lastClick) + " last click ", ChatColor.GREEN, player);
 				if((System.currentTimeMillis() / 1000L) - lastClick > 1) {
 					int slot = e.getRawSlot();
+					Economics eco = shop.getShops().getPlugin().getEconomy();
 					switch (slot) {
 					case 0:
 						player.closeInventory();
 						break;
 					case 10: // buy 3x
-						ShopBuy.buy(player, shop, frame, shop.getShops().getPlugin().getEconomy(), 3);
+						ShopBuy.buy(player, shop, frame, eco, 3);
 						break;
 					case 11: // buy 2x
-						ShopBuy.buy(player, shop, frame, shop.getShops().getPlugin().getEconomy(), 2);
+						ShopBuy.buy(player, shop, frame, eco, 2);
 						break;
 					case 12: // buy 1x
-						ShopBuy.buy(player, shop, frame, shop.getShops().getPlugin().getEconomy(), 1);
+						ShopBuy.buy(player, shop, frame, eco, 1);
 						break;
 					case 14: // sell 1x
-						Output.sendMessage("Coming soon", ChatColor.AQUA, player);
+						ShopSell.sell(player, shop, frame, eco, 1);
 						break;
 					case 15: // sell 2x
-						Output.sendMessage("Coming soon", ChatColor.AQUA, player);
+						ShopSell.sell(player, shop, frame, eco, 2);
 						break;
 					case 16: // sell 3x
-						Output.sendMessage("Coming soon", ChatColor.AQUA, player);
+						ShopSell.sell(player, shop, frame, eco, 3);
 						break;
 					}
 				} else {
