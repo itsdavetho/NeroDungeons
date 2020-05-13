@@ -94,6 +94,9 @@ public class ShopGui implements Listener {
 				if ((System.currentTimeMillis() / 1000L) - lastClick > 0) {
 					int slot = e.getRawSlot();
 					Economics eco = shop.getShops().getPlugin().getEconomy();
+					if(slot > 0) {
+						setTile(22, new ItemStack(Material.PAPER), "Info", "Stock: " + shop.getStock(((Chest)shop.getChest().getState()).getInventory(), frame.getItem()));
+					}
 					switch (slot) {
 					case 0:
 						player.closeInventory();

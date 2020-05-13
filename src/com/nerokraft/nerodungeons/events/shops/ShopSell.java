@@ -28,8 +28,7 @@ public class ShopSell {
 		String payment = shop.getShops().getPlugin().getEconomy().currencyToString(shop.getCurrency());
 		double ownerWallet = shop.getShops().getPlugin().getEconomy().balance(customer, shop.getCurrency());
 		int totalAmount = quantity * shop.getAmount();
-		double totalPayed = Math
-				.floor((shop.getCost() * shop.getShops().getPlugin().getEconomy().getValueDecay()) * quantity);
+		double totalPayed = Math.floor(shop.getCost() * shop.getShops().getPlugin().getEconomy().getValueDecay()) * quantity;
 		Material material = frame.getItem().getType();
 		boolean sold = PlayerUtil.hasPermission("nerodungeons.nomoney", shop.getPlayer()) || shop.getAdminShop();
 		boolean canSellSelf = shop.getPlayer().getUniqueId().equals(customer.getUniqueId())
@@ -41,6 +40,15 @@ public class ShopSell {
 			Inventory playerInventory = customer.getInventory();
 			ItemStack stack = frame.getItem();
 			boolean inInventory = playerInventory.containsAtLeast(stack, totalAmount);
+			if(!inInventory) {
+				int stock = shop.getStock(customer.getInventory(), stack);
+				if(stock > 0) {
+					inInventory = true;
+					totalAmount = stock;
+					totalPayed =  Math
+							.floor(((shop.getCost()/shop.getAmount()) * shop.getShops().getPlugin().getEconomy().getValueDecay()) * totalAmount);
+				}
+			}
 			if (inInventory) {
 				if (sold == false && !customer.getUniqueId().equals(shop.getPlayer().getUniqueId())) {
 					sold = shop.getCurrency() == Currencies.REWARD_POINTS
@@ -92,6 +100,7 @@ public class ShopSell {
 					}
 					shop.getFrameLocation().getWorld().spawnParticle(Particle.VILLAGER_HAPPY, aboveHead, 20, 1, 1, 1);
 					customer.getWorld().playSound(customer.getLocation(), Sound.ENTITY_VILLAGER_CELEBRATE, 1.0f, 1.0f);
+					return true;
 				} else {
 					double difference = Math.floor(totalPayed - ownerWallet);
 					Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNeedMoney")

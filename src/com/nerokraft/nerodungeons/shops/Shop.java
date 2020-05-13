@@ -7,7 +7,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -196,9 +195,7 @@ public class Shop {
 
 	public int getStock(Inventory inventory, ItemStack item) {
 		int count = 0;
-		Chest chest = (Chest) this.getChest().getState();
-		Inventory inv = chest.getInventory();
-		for (ItemStack i : inv.getContents()) {
+		for (ItemStack i : inventory.getContents()) {
 			if (i != null && i.getType() != Material.AIR) {
 				if (i.isSimilar(item)) {
 					count += i.getAmount();

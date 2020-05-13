@@ -44,7 +44,6 @@ public class ShopBuy {
 			return false;
 		}
 		String currencyName = economy.currencyToString(shop.getCurrency());
-		String msg = totalAmount + "x" + shop.getName() + " (" + totalCost + " " + currencyName + ")";
 		if (shop.getUUID().equals(customer.getUniqueId())
 				&& !PlayerUtil.hasPermission("nerodungeons.buy.own", customer)) {
 			Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopBuyOwn"), ChatColor.RED,
@@ -84,8 +83,8 @@ public class ShopBuy {
 					int stock = shop.getStock(shopInv, stack);
 					if (stock > 0) {
 						totalAmount = stock;
-						totalCost = (double)totalAmount * shop.getCost();
-						Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopLastStock"), ChatColor.DARK_BLUE, customer);
+						totalCost = Math.ceil((double)totalAmount * (shop.getCost()/shop.getAmount()));
+						Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopLastStock"), ChatColor.AQUA, customer);
 					} else {
 						Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNoStock"),
 								ChatColor.DARK_AQUA, customer);
@@ -109,6 +108,7 @@ public class ShopBuy {
 				}
 			}
 			if (sold) {
+				String msg = totalAmount + "x" + shop.getName() + " (" + totalCost + " " + currencyName + ")";
 				boolean buySelf = customer.getUniqueId().equals(owner.getUniqueId());
 				if (!buySelf) {
 					Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopBought") + " " + msg,
