@@ -18,12 +18,14 @@ public class ShopDestroy {
 		Entity[] es = shop.getWorld().getChunkAt(shop.getBlock()).getEntities();
 		for(Entity e : es) {
 			if(e instanceof ItemFrame && e.getLocation().equals(shop.getFrameLocation())) {
+				final ItemFrame frame = (ItemFrame) e;
+				shop.getShops().setShopMeta(frame, 0l);
 				((ItemFrame) e).setItem(new ItemStack(Material.AIR));
 				break;
 			}
 		}
 		shop.getShops().removeShop(shop);
-		if(shop.getPlayer().isOnline()) {
+		if(shop.getPlayer() != null) {
 			Output.sendMessage("Your shop was destroyed!", ChatColor.YELLOW, shop.getPlayer());
 		}
 		return true;

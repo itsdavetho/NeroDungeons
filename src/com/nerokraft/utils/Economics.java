@@ -1,5 +1,9 @@
 package com.nerokraft.utils;
 
+import java.util.UUID;
+
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
@@ -19,58 +23,90 @@ public class Economics {
 		this.setupEconomy(inst);
 	}
 
-	public boolean modifyRewards(Player player, double amount) {
-		if (amount == 0) {
-			return false;
+	public double balance(UUID uuid, Currencies type) {
+		Player player = Bukkit.getServer().getPlayer(uuid);
+		OfflinePlayer offlinePlayer = null;
+		if(player == null) {
+			offlinePlayer = Bukkit.getServer().getOfflinePlayer(uuid);
+			if(offlinePlayer == null) {
+				System.out.println("No such player " + uuid);
+				return 0.0;
+			}
 		}
-		int wallet = (int) this.balance(player, Currencies.REWARD_POINTS);
-		int difference = (int) Math.ceil(wallet + amount);
-		if (difference < 0) {
-			return false;
-		}
-		player.getScoreboard().getObjective("rewardPoints").getScore(player.getName()).setScore(difference);
-		return true;
-	}
-
-	public double balance(Player player, Currencies type) {
 		if (type == Currencies.ECONOMY) {
 			if (this.getEconomy() != null) {
-				return this.getEconomy().getBalance(player);
+				return this.getEconomy().getBalance((player != null ? player : offlinePlayer));
 			}
 		} else {
-			return player.getScoreboard().getObjective("rewardPoints").getScore(player.getName()).getScore();
+			return player.getScoreboard().getObjective("rewardPoints").getScore((player != null ? player.getName() : offlinePlayer.getName())).getScore();
 		}
 		return 0.0;
 	}
 
-	public boolean deposit(Player player, double amount) {
+	public String currencyToString(Currencies currency) {
+		return currency == Currencies.REWARD_POINTS ? "reward points" : "gold";
+	}
+
+	public boolean deposit(UUID uuid, double amount) {
+		Player player = Bukkit.getServer().getPlayer(uuid);
+		OfflinePlayer offlinePlayer = null;
+		if(player == null) {
+			offlinePlayer = Bukkit.getServer().getOfflinePlayer(uuid);
+			if(offlinePlayer == null) {
+				System.out.println("No such player " + uuid);
+				return false;
+			}
+		}
 		if (this.getEconomy() != null) {
 			EconomyResponse r;
-			r = this.getEconomy().depositPlayer(player, amount);
+			r = this.getEconomy().depositPlayer(player != null ? player : offlinePlayer, amount);
 			if (r.transactionSuccess()) {
 				return true;
 			} else {
-				player.sendMessage("Your balance could not be updated: " + r.errorMessage);
+				if(player != null) {
+					player.sendMessage("Your balance could not be updated: " + r.errorMessage);
+				}
 			}
 		}
 		return false;
 	}
 
-	public boolean withdraw(Player player, double amount) {
-		if (this.getEconomy() != null) {
-			EconomyResponse r;
-			r = this.getEconomy().withdrawPlayer(player, amount);
-			if (r.transactionSuccess()) {
-				return true;
-			} else {
-				player.sendMessage("Your balance could not be updated: " + r.errorMessage);
-			}
-		}
-		return false;
+	public Economy getEconomy() {
+		return this.eco;
 	}
 	
-	public String currencyToString(Currencies currency) {
-		return currency == Currencies.REWARD_POINTS ? "reward points" : "gold";
+	public double getValueDecay() {
+		return this.tradeValueDecay;
+	}
+
+	public double getWalletBuffer(Currencies type) {
+		return type == Currencies.REWARD_POINTS ? walletBufferRewards : walletBufferEconomy;
+	}
+
+	public boolean modifyRewards(UUID uuid, double amount) {
+		if (amount == 0) {
+			return false;
+		}
+		Player player = Bukkit.getServer().getPlayer(uuid);
+		OfflinePlayer offlinePlayer = null;
+		if(player == null) {
+			offlinePlayer = Bukkit.getServer().getOfflinePlayer(uuid);
+			if(offlinePlayer == null) {
+				System.out.println("No such player " + uuid);
+				return false;
+			}
+		}
+		int wallet = (int) this.balance(uuid, Currencies.REWARD_POINTS);
+		int difference = (int) Math.ceil(wallet + amount);
+		if (difference < 0) {
+			return false;
+		}
+		player.getScoreboard().getObjective("rewardPoints").getScore(player != null ? player.getName() : offlinePlayer.getName()).setScore(difference);
+		return true;
+	}
+
+	private void setEconomy(Economy eco) {
+		this.eco = eco;
 	}
 
 	private boolean setupEconomy(NeroKraft inst) {
@@ -84,32 +120,38 @@ public class Economics {
 		this.setEconomy(rsp.getProvider());
 		return true;
 	}
-
-	private void setEconomy(Economy eco) {
-		this.eco = eco;
-	}
-
-	public Economy getEconomy() {
-		return this.eco;
-	}
-
-	public double getValueDecay() {
-		return this.tradeValueDecay;
-	}
 	
 	public void setValueDecay(double decay) {
 		this.tradeValueDecay = decay;
 	}
 
-	public double getWalletBuffer(Currencies type) {
-		return type == Currencies.REWARD_POINTS ? walletBufferRewards : walletBufferEconomy;
-	}
-	
 	public void setWalletBuffer(double buffer, Currencies type) {
 		if(type == Currencies.REWARD_POINTS) {
 			this.walletBufferRewards = buffer;
 		} else {
 			this.walletBufferEconomy = buffer;
 		}
+	}
+	
+	public boolean withdraw(UUID uuid, double amount) {
+		if (this.getEconomy() != null) {
+			EconomyResponse r;
+			Player player = Bukkit.getServer().getPlayer(uuid);
+			OfflinePlayer offlinePlayer = null;
+			if(player == null) {
+				offlinePlayer = Bukkit.getServer().getOfflinePlayer(uuid);
+				if(offlinePlayer == null) {
+					System.out.println("No such player " + uuid);
+					return false;
+				}
+			}
+			r = this.getEconomy().withdrawPlayer(player != null ? player : offlinePlayer, amount);
+			if (r.transactionSuccess()) {
+				return true;
+			} else {
+				player.sendMessage("Your balance could not be updated: " + r.errorMessage);
+			}
+		}
+		return false;
 	}
 }

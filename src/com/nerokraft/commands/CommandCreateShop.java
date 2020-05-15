@@ -58,10 +58,9 @@ public class CommandCreateShop {
 					creator.setCost(cost);
 					creator.setCurrency(currency);
 					Shop shop = creator.insertShop();
-					if(shop != null) {
-						intake.getPlugin().getShops().updateShop(shop, player);
-					} else {
-						Output.sendMessage(intake.getPlugin().getMessages().getString("ShopCreateFail"), ChatColor.RED, player);
+					if(shop == null) {
+						Output.sendMessage(intake.getPlugin().getMessages().getString("ShopCreateFail").replace("%s", creator.getMaterial().getMaxStackSize() + ""), ChatColor.RED, player);
+						creator = null;
 					}
 				} else if (creator != null && creator.waitingForChest() == true) {
 					Output.sendMessage(intake.getPlugin().getMessages().getString("ShopSelectChest"), ChatColor.BLUE, player);

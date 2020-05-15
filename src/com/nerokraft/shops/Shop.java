@@ -19,25 +19,25 @@ public class Shop {
 	private boolean canSell = true;
 	private Double cost = 1.0;
 	private Currencies currency;
-	private String itemId;
 	private NeroShop inst;
 	private Material material;
-	private String owner;
-	private long rowId;
+	private String ownerName;
+	private long shopId;
 	private Location shopLocation, chestLocation;
 	private UUID uuid;
 
 	public Shop(Location frameLocation, Location chestLocation, UUID uuid, String owner, Material material, double cost,
-			int amount, boolean adminShop, Currencies currency, NeroShop shops, boolean canSell, long rowid) {
+			int amount, boolean adminShop, Currencies currency, NeroShop shops, boolean canSell, long shopId2) {
 		this.setUUID(uuid);
 		this.setOwnerName(owner);
+		System.out.println(owner);
 		this.cost = cost;
 		this.amount = amount;
 		this.adminShop = adminShop;
 		this.inst = shops;
 		this.canSell = canSell;
 		this.uuid = uuid;
-		this.rowId = rowid;
+		this.shopId = shopId2;
 		this.setCurrency(currency);
 		this.shopLocation = frameLocation;
 		this.chestLocation = chestLocation;
@@ -45,7 +45,7 @@ public class Shop {
 			this.setMaterial(material);
 			System.out.println("[NeroShops] <" + owner + "> Shop at " + shopLocation.getX() + " " + shopLocation.getX()
 					+ " " + shopLocation.getX() + " on world " + shopLocation.getWorld().getName() + " selling "
-					+ this.getItemId() + " for " + cost + " " + inst.getPlugin().getEconomy().currencyToString(currency));
+					+ material.name() + " for " + cost + " " + currency);
 		}
 	}
 
@@ -59,7 +59,7 @@ public class Shop {
 
 	public Block getBlock() {
 		if (getFrameLocation() == null) {
-			Bukkit.getLogger().warning("[NeroShop] no shop location: " + owner + "'s " + this.getItemId() + " shop");
+			Bukkit.getLogger().warning("[NeroShop] no shop location: " + ownerName + "'s " + this.getItemId() + " shop");
 			return null;
 		}
 		return getFrameLocation().getBlock();
@@ -93,7 +93,7 @@ public class Shop {
 	}
 
 	public String getItemId() {
-		return this.itemId;
+		return getMaterial().name();
 	}
 
 	public Material getMaterial() {
@@ -101,19 +101,22 @@ public class Shop {
 	}
 
 	public String getName() {
+		if(this.getItemId() == null) {
+			return "null";
+		}
 		return Items.getName(this.getItemId());
 	}
 
 	public String getOwnerName() {
-		return owner;
+		return ownerName;
 	}
 
 	public Player getPlayer() {
 		return Bukkit.getServer().getPlayer(getUUID());
 	}
 
-	public long getRowId() {
-		return this.rowId;
+	public long getShopId() {
+		return this.shopId;
 	}
 
 	public NeroShop getShops() {
@@ -172,15 +175,19 @@ public class Shop {
 
 	public void setMaterial(Material material) {
 		this.material = material;
-		this.itemId = getItemId();
 	}
 
 	public void setOwnerName(String owner) {
-		this.owner = owner;
+		System.out.println("son " + owner);
+		this.ownerName = owner;
 	}
 
 	public void setUUID(UUID uuid) {
 		this.uuid = uuid;
+	}
+
+	public void setShopId(long int1) {
+		this.shopId = int1;
 	}
 
 }

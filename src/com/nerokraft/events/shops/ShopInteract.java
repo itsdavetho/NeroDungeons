@@ -45,9 +45,10 @@ public class ShopInteract implements Listener {
 		String currencyName = shop.getCurrency() == Currencies.REWARD_POINTS ? "reward points" : "gold";
 		String text = shop.getName() + " [" + shop.getCost() + " " + currencyName + " for " + shop.getAmount() + "]";
 		try {
-			final Hologram h = instance.getHolograms().createHologram(PlayerUtil.nudgeForward(0.23d, frame, frame.getLocation()), text);
+			final Hologram h = instance.getHolograms()
+					.createHologram(PlayerUtil.nudgeForward(0.23d, frame, frame.getLocation()), text);
 			h.show(player);
-			Bukkit.getServer().getScheduler().scheduleSyncDelayedTask((Plugin)instance, new Runnable() {
+			Bukkit.getServer().getScheduler().scheduleSyncDelayedTask((Plugin) instance, new Runnable() {
 				public void run() {
 					try {
 						h.hide(player);
@@ -56,13 +57,13 @@ public class ShopInteract implements Listener {
 						e.printStackTrace();
 					}
 				}
-			}, (20l*3l));
-		} catch(Exception e) {
+			}, (20l * 3l));
+		} catch (Exception e) {
 			Output.sendDebug(e.getMessage(), ChatColor.RED, player);
 			e.printStackTrace();
 		}
 	}
-	
+
 	private boolean removeCreatorByLocation(Location location) {
 		for (ShopCreate creator : creators.values()) {
 			if (creator.getFrameLocation().equals(location)) {
@@ -106,8 +107,9 @@ public class ShopInteract implements Listener {
 	public void entityDamageByEntity(EntityDamageByEntityEvent event) {
 		if (event.getDamager() instanceof Player && event.getEntity() instanceof ItemFrame) {
 			Player player = (Player) event.getDamager();
-			Block block = player.getWorld().getBlockAt(event.getEntity().getLocation());
-			Shop s = instance.getShops().getShop(block);
+			final ItemFrame frame = (ItemFrame) event.getEntity();
+			long shopid = instance.getShops().getShopMeta(frame);
+			Shop s = instance.getShops().getShop(shopid);
 			if (s != null) {
 				ShopDestroy.destroy(s);
 			} else if (creators.containsKey(player)
@@ -121,8 +123,9 @@ public class ShopInteract implements Listener {
 	public void onHangingBreakEvent(HangingBreakEvent event) {
 		if (event.getEntity() instanceof ItemFrame) {
 			boolean cancel = false;
-			Shop shop = instance.getShops()
-					.getShop(event.getEntity().getWorld().getBlockAt(event.getEntity().getLocation()));
+			final ItemFrame frame = (ItemFrame) event.getEntity();
+			long shopid = instance.getShops().getShopMeta(frame);
+			Shop shop = instance.getShops().getShop(shopid);
 			if (shop != null) {
 				cancel = ShopDestroy.destroy(shop);
 			} else {
@@ -136,8 +139,9 @@ public class ShopInteract implements Listener {
 	public void onHangingBreakByEntity(HangingBreakByEntityEvent event) {
 		if (event.getEntity() instanceof ItemFrame) {
 			boolean cancel = false;
-			Block block = event.getEntity().getWorld().getBlockAt(event.getEntity().getLocation());
-			Shop shop = instance.getShops().getShop(block);
+			final ItemFrame frame = (ItemFrame) event.getEntity();
+			long shopid = instance.getShops().getShopMeta(frame);
+			Shop shop = instance.getShops().getShop(shopid);
 			if (event.getRemover() instanceof Player && shop != null) {
 				Player player = (Player) event.getRemover();
 				if (shop.getUUID().equals(player.getUniqueId())
@@ -156,29 +160,28 @@ public class ShopInteract implements Listener {
 		final Entity entity = event.getRightClicked();
 		if (entity instanceof ItemFrame) {
 			final ItemFrame frame = (ItemFrame) entity;
-			Block b = player.getWorld().getBlockAt(frame.getLocation());
-			Shop shop = instance.getShops().getShop(b);
-			if (shop == null) {
-				boolean result = ShopCreate.handle(player, frame, b, event, this);
+			long shopid = instance.getShops().getShopMeta(frame);
+			if (shopid <= 0) {
+				boolean result = ShopCreate.handle(player, frame, event, this);
 				event.setCancelled(result);
 			} else {
-				if(!player.isSneaking()) {
+				Shop shop = instance.getShops().getShop(shopid);
+				if (!player.isSneaking()) {
 					ShopGui gui = new ShopGui(shop, frame, player);
 					gui.show();
 					guis.put(player, gui);
-				} else { 
+				} else {
 					showHologram(shop, player, frame);
 				}
 				event.setCancelled(true);
 			}
 		}
 	}
-	
+
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		Block block = event.getClickedBlock();
 		Player player = event.getPlayer();
-
 		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getPlayer().isSneaking()
 				&& PlayerUtil.hasPermission("nerodungeons.createshop", player)) {
 			if (block.getType() == Material.CHEST) {
@@ -197,7 +200,7 @@ public class ShopInteract implements Listener {
 			}
 		} else if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
 			if (block.getType() == Material.CHEST) {
-				Shop shop = instance.getShops().getShop(block);
+				Shop shop = instance.getShops().getShop(block.getLocation());
 				if (shop != null) {
 					if (shop.getUUID().equals(player.getUniqueId())
 							&& PlayerUtil.canBuild(shop.getChestLocation(), player)) {

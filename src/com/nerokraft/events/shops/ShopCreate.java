@@ -1,7 +1,6 @@
 package com.nerokraft.events.shops;
 
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -63,10 +62,10 @@ public class ShopCreate extends Shop {
 		}
 	}
 
-	public static boolean handle(Player player, ItemFrame frame, Block b, PlayerInteractEntityEvent event,
+	public static boolean handle(Player player, ItemFrame frame, PlayerInteractEntityEvent event,
 			ShopInteract si) {
 		boolean canCreateShop = PlayerUtil.hasPermission("nerodungeons.createshop", player)
-				&& PlayerUtil.canBuild(b.getLocation(), player);
+				&& PlayerUtil.canBuild(frame.getLocation(), player);
 		if (!canCreateShop) {
 			return false;
 		}
@@ -111,12 +110,15 @@ public class ShopCreate extends Shop {
 			if (super.getMaterial() == null) { // why would this happen ? this should prevent it anyways.
 				super.setMaterial(Material.COBBLESTONE);
 			}
+			System.out.println(player.getName() + " is");
 			Shop shop = new Shop(super.getFrameLocation(), super.getChestLocation(), player.getUniqueId(),
 					player.getName(), super.getMaterial(), super.getCost(), super.getAmount(), super.getAdminShop(),
 					super.getCurrency(), getPlugin().getShops(), super.getCanSell(), -1);
-			this.getPlugin().getShops().updateShop(shop, player);
 			Output.sendMessage("Shop created", ChatColor.GREEN, player);
 			this.getPlugin().getShops().getShopInteractions().removeShopCreator(player, false);
+			long shopId = this.getPlugin().getShops().addShop(shop, player);
+			getPlugin().getShops().getShops().put(shopId, shop);
+			getPlugin().getShops().setShopMeta(frame, shopId);
 			this.player = null;
 			this.frame = null;
 			return shop;

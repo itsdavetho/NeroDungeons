@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 
 import com.nerokraft.shops.Currencies;
 import com.nerokraft.shops.Shop;
+import com.nerokraft.shops.ShopOwner;
 import com.nerokraft.utils.Economics;
 import com.nerokraft.utils.Items;
 import com.nerokraft.utils.Output;
@@ -59,7 +60,7 @@ public class ShopBuy {
 			customer.playSound(shopLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 2f);
 			return false;
 		}
-		double customerWallet = economy.balance(customer, shop.getCurrency());
+		double customerWallet = economy.balance(customer.getUniqueId(), shop.getCurrency());
 		Location aboveHead = customer.getLocation(); // above head particles
 		aboveHead.setY(aboveHead.getY() + 2.5f);
 		if (totalCost > customerWallet && !PlayerUtil.hasPermission("nerodungeons.nomoney", customer)) {
@@ -70,13 +71,14 @@ public class ShopBuy {
 					.replace("%d", "" + difference).replace("%s", currencyName), ChatColor.RED, customer);
 			return false;
 		} else {
-			Player owner = shop.getPlayer();
+			ShopOwner shopOwner = new ShopOwner(shop.getUUID());
+			Player owner = shopOwner.getPlayer();
 			if (!shop.getAdminShop()) {
 				Chest chest = (Chest) shop.getChest().getState();
 				Inventory shopInv = chest.getInventory();
 				ItemStack stack = new ItemStack(frame.getItem());
 				if (!shopInv.containsAtLeast(stack, totalAmount)) {
-					if (owner.isOnline()) {
+					if (owner != null) {
 						Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNeedStock")
 								.replace("%s", shop.getName()), ChatColor.LIGHT_PURPLE, owner);
 					}
@@ -97,24 +99,24 @@ public class ShopBuy {
 			}
 			boolean sold = PlayerUtil.hasPermission("nerodungeons.nomoney", customer);
 			if (sold == false) {
-				sold = shop.getCurrency() == Currencies.REWARD_POINTS ? economy.modifyRewards(customer, -totalCost)
-						: economy.withdraw(customer, totalCost);
+				sold = shop.getCurrency() == Currencies.REWARD_POINTS ? economy.modifyRewards(customer.getUniqueId(), -totalCost)
+						: economy.withdraw(customer.getUniqueId(), totalCost);
 			}
 			if (sold && !shop.getAdminShop()) {
 				if (shop.getCurrency() == Currencies.REWARD_POINTS) {
-					economy.modifyRewards(owner, totalCost);
+					economy.modifyRewards(shop.getUUID(), totalCost);
 				} else {
-					economy.deposit(owner, totalCost);
+					economy.deposit(shop.getUUID(), totalCost);
 				}
 			}
 			if (sold) {
 				String msg = totalAmount + "x" + shop.getName() + " (" + totalCost + " " + currencyName + ")";
-				boolean buySelf = customer.getUniqueId().equals(owner.getUniqueId());
+				boolean buySelf = customer.getUniqueId().equals(shop.getUUID());
 				if (!buySelf) {
 					Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopBought") + " " + msg,
 							ChatColor.BLUE, customer);
 				}
-				if (owner.isOnline()) {
+				if (owner != null) {
 					Output.sendMessage(customer.getName() + " "
 							+ shop.getShops().getPlugin().getMessages().getString("ShopBought").toLowerCase() + " "
 							+ msg, ChatColor.GREEN, owner);

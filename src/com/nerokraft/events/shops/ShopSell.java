@@ -26,18 +26,18 @@ public class ShopSell {
 			return false;
 		}
 		String payment = shop.getShops().getPlugin().getEconomy().currencyToString(shop.getCurrency());
-		double ownerWallet = shop.getShops().getPlugin().getEconomy().balance(customer, shop.getCurrency());
+		double ownerWallet = shop.getShops().getPlugin().getEconomy().balance(customer.getUniqueId(), shop.getCurrency());
 		int totalAmount = quantity * shop.getAmount();
 		double totalPayed = Math.floor(shop.getCost() * shop.getShops().getPlugin().getEconomy().getValueDecay())
 				* quantity;
 		Material material = frame.getItem().getType();
 		boolean sold = PlayerUtil.hasPermission("nerodungeons.nomoney", shop.getPlayer()) || shop.getAdminShop();
-		boolean canSellSelf = shop.getPlayer().getUniqueId().equals(customer.getUniqueId())
+		boolean canSellSelf = shop.getUUID().equals(customer.getUniqueId())
 				&& PlayerUtil.hasPermission("nerodungeons.buy.own", customer);
 		Location aboveHead = customer.getLocation(); // above head particles
 		Location fwdOfShop = PlayerUtil.nudgeForward(0.23, frame, shop.getFrameLocation());
 		aboveHead.setY(aboveHead.getY() + 2.5f);
-		if(!canSellSelf && shop.getPlayer().getUniqueId().equals(customer.getUniqueId())) {
+		if(!canSellSelf && shop.getUUID().equals(customer.getUniqueId())) {
 			Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopSellSelf"), ChatColor.GRAY,
 					customer);
 			shop.getFrameLocation().getWorld().spawnParticle(Particle.BARRIER, fwdOfShop, 1);
@@ -59,17 +59,17 @@ public class ShopSell {
 				}
 			}
 			if (inInventory) {
-				if (sold == false && !customer.getUniqueId().equals(shop.getPlayer().getUniqueId())) {
+				if (sold == false && !customer.getUniqueId().equals(shop.getUUID())) {
 					sold = shop.getCurrency() == Currencies.REWARD_POINTS
-							? economy.modifyRewards(shop.getPlayer(), -totalPayed)
-							: economy.withdraw(shop.getPlayer(), totalPayed);
+							? economy.modifyRewards(shop.getUUID(), -totalPayed)
+							: economy.withdraw(shop.getUUID(), totalPayed);
 				}
 				if (sold) {
-					if (!customer.getUniqueId().equals(shop.getPlayer().getUniqueId())) {
+					if (!customer.getUniqueId().equals(shop.getUUID())) {
 						if (shop.getCurrency() == Currencies.REWARD_POINTS) {
-							economy.modifyRewards(customer, totalPayed);
+							economy.modifyRewards(customer.getUniqueId(), totalPayed);
 						} else {
-							economy.deposit(customer, totalPayed);
+							economy.deposit(customer.getUniqueId(), totalPayed);
 						}
 					}
 					Items.removeFromInventory(stack, totalAmount, playerInventory);
@@ -95,7 +95,7 @@ public class ShopSell {
 							}
 						}
 					}
-					if (shop.getPlayer().getUniqueId().equals(customer.getUniqueId()) == false) {
+					if (shop.getUUID().equals(customer.getUniqueId()) == false) {
 						Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopSoldPlayer")
 								.replace("%s", shop.getOwnerName()).replace("%a", "" + totalAmount)
 								.replace("%n", shop.getName()).replace("%p", "" + totalPayed).replace("%t", payment),
