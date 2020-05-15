@@ -1,4 +1,4 @@
-package com.nerokraft.nerodungeons.events.shops;
+package com.nerokraft.events.shops;
 
 import java.util.HashMap;
 
@@ -19,26 +19,87 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.plugin.Plugin;
 
-import com.nerokraft.nerodungeons.NeroDungeons;
-import com.nerokraft.nerodungeons.holograms.Hologram;
-import com.nerokraft.nerodungeons.shops.Currencies;
-import com.nerokraft.nerodungeons.shops.Shop;
-import com.nerokraft.nerodungeons.utils.Output;
-import com.nerokraft.nerodungeons.utils.PlayerUtil;
+import com.nerokraft.NeroKraft;
+import com.nerokraft.holograms.Hologram;
+import com.nerokraft.shops.Currencies;
+import com.nerokraft.shops.Shop;
+import com.nerokraft.utils.Output;
+import com.nerokraft.utils.PlayerUtil;
 
 import net.md_5.bungee.api.ChatColor;
 
 public class ShopInteract implements Listener {
-	private final NeroDungeons instance;
+	private final NeroKraft instance;
 	private HashMap<Player, ShopCreate> creators = new HashMap<Player, ShopCreate>();
 	private HashMap<Player, ShopGui> guis = new HashMap<Player, ShopGui>();
 
-	public ShopInteract(NeroDungeons inst) {
+	public ShopInteract(NeroKraft inst) {
 		instance = inst;
 	}
 
 	public ShopGui inGui(Player player) {
 		return this.guis.containsKey(player) ? this.guis.get(player) : null;
+	}
+
+	private void showHologram(Shop shop, Player player, ItemFrame frame) {
+		String currencyName = shop.getCurrency() == Currencies.REWARD_POINTS ? "reward points" : "gold";
+		String text = shop.getName() + " [" + shop.getCost() + " " + currencyName + " for " + shop.getAmount() + "]";
+		try {
+			final Hologram h = instance.getHolograms().createHologram(PlayerUtil.nudgeForward(0.23d, frame, frame.getLocation()), text);
+			h.show(player);
+			Bukkit.getServer().getScheduler().scheduleSyncDelayedTask((Plugin)instance, new Runnable() {
+				public void run() {
+					try {
+						h.hide(player);
+					} catch (Exception e) {
+						Output.sendDebug(e.getMessage(), ChatColor.RED, player);
+						e.printStackTrace();
+					}
+				}
+			}, (20l*3l));
+		} catch(Exception e) {
+			Output.sendDebug(e.getMessage(), ChatColor.RED, player);
+			e.printStackTrace();
+		}
+	}
+	
+	private boolean removeCreatorByLocation(Location location) {
+		for (ShopCreate creator : creators.values()) {
+			if (creator.getFrameLocation().equals(location)) {
+				this.removeShopCreator(creator.getPlayer(), true);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public ShopCreate addShopCreator(Player player, ItemFrame frame) {
+		if (isCreating(player)) {
+			Bukkit.getLogger().warning("This probably should not have happened");
+			return null;
+		}
+		ShopCreate creator = new ShopCreate(player, frame, instance);
+		creators.put(player, creator);
+		return creator;
+	}
+
+	public void removeShopCreator(Player player) {
+		removeShopCreator(player, true);
+	}
+
+	public void removeShopCreator(Player player, boolean notify) {
+		if (notify) {
+			Output.sendMessage(instance.getMessages().getString("ShopCreatorCancelled"), ChatColor.RED, player);
+		}
+		creators.remove(player);
+	}
+
+	public boolean isCreating(Player player) {
+		return creators.containsKey(player);
+	}
+
+	public ShopCreate getCreator(Player player) {
+		return isCreating(player) ? creators.get(player) : null;
 	}
 
 	@EventHandler
@@ -49,11 +110,9 @@ public class ShopInteract implements Listener {
 			Shop s = instance.getShops().getShop(block);
 			if (s != null) {
 				ShopDestroy.destroy(s);
-				event.setCancelled(true);
 			} else if (creators.containsKey(player)
 					&& creators.get(player).getFrameLocation().equals(event.getEntity().getLocation())) {
 				this.removeShopCreator(player, true);
-				event.setCancelled(true);
 			}
 		}
 	}
@@ -114,29 +173,7 @@ public class ShopInteract implements Listener {
 			}
 		}
 	}
-
-	private void showHologram(Shop shop, Player player, ItemFrame frame) {
-		String currencyName = shop.getCurrency() == Currencies.REWARD_POINTS ? "reward points" : "gold";
-		String text = shop.getName() + " [" + shop.getCost() + " " + currencyName + " for " + shop.getAmount() + "]";
-		try {
-			final Hologram h = instance.getHolograms().createHologram(PlayerUtil.nudgeForward(0.23d, frame, frame.getLocation()), text);
-			h.show(player);
-			Bukkit.getServer().getScheduler().scheduleSyncDelayedTask((Plugin)instance, new Runnable() {
-				public void run() {
-					try {
-						h.hide(player);
-					} catch (Exception e) {
-						Output.sendDebug(e.getMessage(), ChatColor.RED, player);
-						e.printStackTrace();
-					}
-				}
-			}, (20l*3l));
-		} catch(Exception e) {
-			Output.sendDebug(e.getMessage(), ChatColor.RED, player);
-			e.printStackTrace();
-		}
-	}
-
+	
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		Block block = event.getClickedBlock();
@@ -160,7 +197,7 @@ public class ShopInteract implements Listener {
 			}
 		} else if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
 			if (block.getType() == Material.CHEST) {
-				Shop shop = instance.getShops().getShopByChest(block);
+				Shop shop = instance.getShops().getShop(block);
 				if (shop != null) {
 					if (shop.getUUID().equals(player.getUniqueId())
 							&& PlayerUtil.canBuild(shop.getChestLocation(), player)) {
@@ -170,45 +207,5 @@ public class ShopInteract implements Listener {
 				}
 			}
 		}
-
-	}
-
-	private boolean removeCreatorByLocation(Location location) {
-		for (ShopCreate creator : creators.values()) {
-			if (creator.getFrameLocation().equals(location)) {
-				this.removeShopCreator(creator.getPlayer(), true);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public ShopCreate addShopCreator(Player player, ItemFrame frame) {
-		if (isCreating(player)) {
-			Bukkit.getLogger().warning("This probably should not have happened");
-			return null;
-		}
-		ShopCreate creator = new ShopCreate(player, frame, instance);
-		creators.put(player, creator);
-		return creator;
-	}
-
-	public void removeShopCreator(Player player) {
-		removeShopCreator(player, true);
-	}
-
-	public void removeShopCreator(Player player, boolean notify) {
-		if (notify) {
-			Output.sendMessage(instance.getMessages().getString("ShopCreatorCancelled"), ChatColor.RED, player);
-		}
-		creators.remove(player);
-	}
-
-	public boolean isCreating(Player player) {
-		return creators.containsKey(player);
-	}
-
-	public ShopCreate getCreator(Player player) {
-		return isCreating(player) ? creators.get(player) : null;
 	}
 }

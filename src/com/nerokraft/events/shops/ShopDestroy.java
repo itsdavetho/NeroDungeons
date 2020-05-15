@@ -1,12 +1,12 @@
-package com.nerokraft.nerodungeons.events.shops;
+package com.nerokraft.events.shops;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.inventory.ItemStack;
 
-import com.nerokraft.nerodungeons.shops.Shop;
-import com.nerokraft.nerodungeons.utils.Output;
+import com.nerokraft.shops.Shop;
+import com.nerokraft.utils.Output;
 
 import net.md_5.bungee.api.ChatColor;
 

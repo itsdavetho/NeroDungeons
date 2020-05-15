@@ -1,4 +1,4 @@
-package com.nerokraft.nerodungeons.holograms;
+package com.nerokraft.holograms;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -8,7 +8,7 @@ import java.util.Set;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-import com.nerokraft.nerodungeons.nms.NmsUtil;
+import com.nerokraft.nms.NmsUtil;
 
 import net.md_5.bungee.api.ChatColor;
 

@@ -1,13 +1,14 @@
-package com.nerokraft.nerodungeons.commands;
+package com.nerokraft.commands;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.nerokraft.nerodungeons.events.shops.ShopCreate;
-import com.nerokraft.nerodungeons.shops.Currencies;
-import com.nerokraft.nerodungeons.utils.Output;
-import com.nerokraft.nerodungeons.utils.PlayerUtil;
+import com.nerokraft.events.shops.ShopCreate;
+import com.nerokraft.shops.Currencies;
+import com.nerokraft.shops.Shop;
+import com.nerokraft.utils.Output;
+import com.nerokraft.utils.PlayerUtil;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -56,8 +57,12 @@ public class CommandCreateShop {
 					creator.setAmount(amount);
 					creator.setCost(cost);
 					creator.setCurrency(currency);
-					creator.insertShop();
-					intake.getPlugin().getShops().saveShops(player);
+					Shop shop = creator.insertShop();
+					if(shop != null) {
+						intake.getPlugin().getShops().updateShop(shop, player);
+					} else {
+						Output.sendMessage(intake.getPlugin().getMessages().getString("ShopCreateFail"), ChatColor.RED, player);
+					}
 				} else if (creator != null && creator.waitingForChest() == true) {
 					Output.sendMessage(intake.getPlugin().getMessages().getString("ShopSelectChest"), ChatColor.BLUE, player);
 				} else if(creator != null && creator.waitingForItem() == true) {

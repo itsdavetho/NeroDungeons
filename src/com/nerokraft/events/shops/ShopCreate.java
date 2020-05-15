@@ -1,4 +1,4 @@
-package com.nerokraft.nerodungeons.events.shops;
+package com.nerokraft.events.shops;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -8,12 +8,12 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.nerokraft.nerodungeons.NeroDungeons;
-import com.nerokraft.nerodungeons.shops.Currencies;
-import com.nerokraft.nerodungeons.shops.Shop;
-import com.nerokraft.nerodungeons.utils.Items;
-import com.nerokraft.nerodungeons.utils.Output;
-import com.nerokraft.nerodungeons.utils.PlayerUtil;
+import com.nerokraft.NeroKraft;
+import com.nerokraft.shops.Currencies;
+import com.nerokraft.shops.Shop;
+import com.nerokraft.utils.Items;
+import com.nerokraft.utils.Output;
+import com.nerokraft.utils.PlayerUtil;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -22,11 +22,11 @@ import net.md_5.bungee.api.chat.TextComponent;
 public class ShopCreate extends Shop {
 	private Player player;
 	private ItemFrame frame;
-	private final NeroDungeons plugin;
+	private final NeroKraft plugin;
 
-	public ShopCreate(Player player, ItemFrame frame, NeroDungeons instance) {
+	public ShopCreate(Player player, ItemFrame frame, NeroKraft instance) {
 		super(frame.getLocation(), null, player.getUniqueId(), player.getName(), null, -1, -1, false,
-				Currencies.REWARD_POINTS, instance.getShops(), true);
+				Currencies.REWARD_POINTS, instance.getShops(), true, -1);
 		this.player = player;
 		this.frame = frame;
 		this.plugin = instance;
@@ -106,23 +106,25 @@ public class ShopCreate extends Shop {
 		return false;
 	}
 
-	public void insertShop() {
+	public Shop insertShop() {
 		if (super.getAmount() > 0 && super.getCost() > 0) {
 			if (super.getMaterial() == null) { // why would this happen ? this should prevent it anyways.
 				super.setMaterial(Material.COBBLESTONE);
 			}
 			Shop shop = new Shop(super.getFrameLocation(), super.getChestLocation(), player.getUniqueId(),
 					player.getName(), super.getMaterial(), super.getCost(), super.getAmount(), super.getAdminShop(),
-					super.getCurrency(), getPlugin().getShops(), super.getCanSell());
-			this.getPlugin().getShops().addShop(shop);
+					super.getCurrency(), getPlugin().getShops(), super.getCanSell(), -1);
+			this.getPlugin().getShops().updateShop(shop, player);
 			Output.sendMessage("Shop created", ChatColor.GREEN, player);
 			this.getPlugin().getShops().getShopInteractions().removeShopCreator(player, false);
 			this.player = null;
 			this.frame = null;
+			return shop;
 		}
+		return null;
 	}
 
-	private NeroDungeons getPlugin() {
+	private NeroKraft getPlugin() {
 		return this.plugin;
 	}
 
@@ -131,6 +133,6 @@ public class ShopCreate extends Shop {
 	}
 
 	public boolean waitingForChest() {
-		return ((super.getChest().getType().equals(Material.CHEST)) == false) && this.getAdminShop() == false;
+		return this.getAdminShop() == false && super.getChest() != null && ((super.getChest().getType().equals(Material.CHEST)) == false);
 	}
 }

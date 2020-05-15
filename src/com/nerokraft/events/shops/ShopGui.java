@@ -1,4 +1,4 @@
-package com.nerokraft.nerodungeons.events.shops;
+package com.nerokraft.events.shops;
 
 import java.util.Arrays;
 
@@ -14,11 +14,11 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.nerokraft.nerodungeons.shops.Currencies;
-import com.nerokraft.nerodungeons.shops.Shop;
-import com.nerokraft.nerodungeons.utils.Economics;
-import com.nerokraft.nerodungeons.utils.Output;
-import com.nerokraft.nerodungeons.utils.PlayerUtil;
+import com.nerokraft.shops.Currencies;
+import com.nerokraft.shops.Shop;
+import com.nerokraft.utils.Economics;
+import com.nerokraft.utils.Output;
+import com.nerokraft.utils.PlayerUtil;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -126,9 +126,9 @@ public class ShopGui implements Listener {
 					Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopSlowDown"),
 							ChatColor.DARK_PURPLE, player);
 				}
-				lastClick = System.currentTimeMillis() / 1000L;
 			}
 			e.setCancelled(true);
 		}
+		lastClick = System.currentTimeMillis() / 1000L;
 	}
 }

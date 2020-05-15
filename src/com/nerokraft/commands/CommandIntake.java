@@ -1,4 +1,4 @@
-package com.nerokraft.nerodungeons.commands;
+package com.nerokraft.commands;
 
 import java.util.HashMap;
 
@@ -8,16 +8,16 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.nerokraft.nerodungeons.NeroDungeons;
-import com.nerokraft.nerodungeons.utils.Output;
+import com.nerokraft.NeroKraft;
+import com.nerokraft.utils.Output;
 
 import net.md_5.bungee.api.ChatColor;
 
 public class CommandIntake implements CommandExecutor {
-	private final NeroDungeons instance;
+	private final NeroKraft instance;
 	private HashMap<CommandSender, String[]> senders = new HashMap<CommandSender, String[]>();
 
-	public CommandIntake(NeroDungeons plugin) {
+	public CommandIntake(NeroKraft plugin) {
 		instance = plugin;
 	}
 
@@ -30,16 +30,13 @@ public class CommandIntake implements CommandExecutor {
 			case "cs":
 				new CommandCreateShop(this, sender);
 				break;
-			/*case "hologram":
-				new CommandCreateHologram(this, sender);
-				break;*/
 			}
 			return true;
 		}
 		return false;
 	}
 
-	public NeroDungeons getPlugin() {
+	public NeroKraft getPlugin() {
 		return instance;
 	}
 

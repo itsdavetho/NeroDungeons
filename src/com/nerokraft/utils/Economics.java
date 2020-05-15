@@ -1,10 +1,10 @@
-package com.nerokraft.nerodungeons.utils;
+package com.nerokraft.utils;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import com.nerokraft.nerodungeons.NeroDungeons;
-import com.nerokraft.nerodungeons.shops.Currencies;
+import com.nerokraft.NeroKraft;
+import com.nerokraft.shops.Currencies;
 
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
@@ -15,7 +15,7 @@ public class Economics {
 	private double walletBufferRewards = 100;
 	private double walletBufferEconomy = 200;
 
-	public Economics(NeroDungeons inst) {
+	public Economics(NeroKraft inst) {
 		this.setupEconomy(inst);
 	}
 
@@ -73,7 +73,7 @@ public class Economics {
 		return currency == Currencies.REWARD_POINTS ? "reward points" : "gold";
 	}
 
-	private boolean setupEconomy(NeroDungeons inst) {
+	private boolean setupEconomy(NeroKraft inst) {
 		if (inst.getServer().getPluginManager().getPlugin("Vault") == null) {
 			return false;
 		}

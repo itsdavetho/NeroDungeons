@@ -1,4 +1,4 @@
-package com.nerokraft.nerodungeons.shops;
+package com.nerokraft.shops;
 
 public enum Currencies {
 	REWARD_POINTS, ECONOMY

@@ -1,12 +1,12 @@
-package com.nerokraft.nerodungeons.utils;
+package com.nerokraft.utils;
 
 import java.io.File;
 import java.io.FilenameFilter;
 
-import com.nerokraft.nerodungeons.NeroDungeons;
+import com.nerokraft.NeroKraft;
 
 public class Config {
-	public static File[] getConfigs(String configName, NeroDungeons inst, String extension) {
+	public static File[] getConfigs(String configName, NeroKraft inst, String extension) {
 		File config = new File(inst.getDataFolder(), configName + "/");
 		File[] configs;
 		if (!extension.isEmpty()) {

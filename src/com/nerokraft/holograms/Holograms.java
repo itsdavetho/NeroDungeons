@@ -1,4 +1,4 @@
-package com.nerokraft.nerodungeons.holograms;
+package com.nerokraft.holograms;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
@@ -6,13 +6,13 @@ import java.util.Set;
 
 import org.bukkit.Location;
 
-import com.nerokraft.nerodungeons.NeroDungeons;
+import com.nerokraft.NeroKraft;
 
 public class Holograms {
-	private final NeroDungeons plugin;
+	private final NeroKraft plugin;
 	private Set<Hologram> holograms = new HashSet<Hologram>();
 
-	public Holograms(NeroDungeons plugin) {
+	public Holograms(NeroKraft plugin) {
 		this.plugin = plugin;
 	}
 
@@ -32,7 +32,7 @@ public class Holograms {
 		return this.holograms;
 	}
 
-	public NeroDungeons getPlugin() {
+	public NeroKraft getPlugin() {
 		return this.plugin;
 	}
 }

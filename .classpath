@@ -14,5 +14,6 @@
 	<classpathentry kind="lib" path="C:/Users/Dave/Desktop/api-5.0.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Dave/eclipse-workspace/GriefPrevention.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Dave/eclipse-workspace/Vault.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Dave/Desktop/sqlite-jdbc-3.31.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -1,4 +1,4 @@
-package com.nerokraft.nerodungeons.utils;
+package com.nerokraft.utils;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
