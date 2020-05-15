@@ -25,20 +25,17 @@ public class Items {
 
 	public static int invSpace(Inventory inv, Material m) {
 		int count = 0;
-		for (int slot = 0; slot < inv.getSize(); slot++) {
-			ItemStack is = inv.getItem(slot);
-			if (is == null) {
+		ItemStack[] items = inv.getStorageContents();
+		for (ItemStack item : items) {
+			if (item == null || item.getType() == Material.AIR) {
 				count += m.getMaxStackSize();
-			}
-			if (is != null) {
-				if (is.getType() == m) {
-					count += (m.getMaxStackSize() - is.getAmount());
-				}
+			} else if (item.getType().equals(m) && item.getAmount() < m.getMaxStackSize()) {
+				count += m.getMaxStackSize() - item.getAmount();
 			}
 		}
 		return count;
 	}
-	
+
 	public static String getName(String id) {
 		return id.replace("_", " ").toLowerCase();
 	}

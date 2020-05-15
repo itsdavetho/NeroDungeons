@@ -21,7 +21,6 @@ import org.bukkit.plugin.Plugin;
 
 import com.nerokraft.NeroKraft;
 import com.nerokraft.holograms.Hologram;
-import com.nerokraft.shops.Currencies;
 import com.nerokraft.shops.Shop;
 import com.nerokraft.utils.Output;
 import com.nerokraft.utils.PlayerUtil;
@@ -42,7 +41,7 @@ public class ShopInteract implements Listener {
 	}
 
 	private void showHologram(Shop shop, Player player, ItemFrame frame) {
-		String currencyName = shop.getCurrency() == Currencies.REWARD_POINTS ? "reward points" : "gold";
+		String currencyName = instance.getEconomy().currencyToString(shop.getCurrency());
 		String text = shop.getName() + " [" + shop.getCost() + " " + currencyName + " for " + shop.getAmount() + "]";
 		try {
 			final Hologram h = instance.getHolograms()

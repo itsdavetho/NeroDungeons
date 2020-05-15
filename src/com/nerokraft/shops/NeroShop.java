@@ -57,8 +57,8 @@ public class NeroShop {
 	}
 
 	public Shop getShop(Location chestLocation) {
-		for(Shop s : shops.values()) {
-			if(s.getChestLocation().equals(chestLocation)) {
+		for (Shop s : shops.values()) {
+			if (s.getChestLocation().equals(chestLocation)) {
 				return s;
 			}
 		}
@@ -135,6 +135,7 @@ public class NeroShop {
 			statement.setQueryTimeout(15);
 			String query = "DELETE FROM shops WHERE shopId = " + shop.getShopId();
 			statement.executeUpdate(query);
+			shops.remove(shop.getShopId());
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -159,7 +160,7 @@ public class NeroShop {
 					+ "',\r\n" + "  " + s.getFrameLocation().getX() + ",\r\n" + "  " + s.getFrameLocation().getY()
 					+ ",\r\n" + "  " + s.getFrameLocation().getZ() + ",\r\n" + "  " + chestX + ",\r\n" + "  " + chestY
 					+ ",\r\n" + "  " + chestZ + "\r\n" + ")";
-			Output.sendDebug(query, ChatColor.GREEN, p);
+			// Output.sendDebug(query, ChatColor.GREEN, p);
 			statement.executeUpdate(query);
 			ResultSet rs = statement.getGeneratedKeys();
 			if (rs.next()) {
@@ -175,12 +176,18 @@ public class NeroShop {
 	}
 
 	public void setShopMeta(ItemFrame frame, long l) {
-		NamespacedKey key = new NamespacedKey(instance, "neroshop");
-		ItemStack stack = frame.getItem();
-		ItemMeta meta = stack.getItemMeta();
-		meta.getPersistentDataContainer().set(key, PersistentDataType.LONG, l);
-		stack.setItemMeta(meta);
-		frame.setItem(stack);
+		if (frame.getItem() != null && frame.getItem().getType() != Material.AIR) {
+			NamespacedKey key = new NamespacedKey(instance, "neroshop");
+			ItemStack stack = frame.getItem();
+			ItemMeta meta = stack.getItemMeta();
+			if (l <= 0 && meta.getPersistentDataContainer().has(key, PersistentDataType.LONG)) {
+				meta.getPersistentDataContainer().remove(key);
+			} else {
+				meta.getPersistentDataContainer().set(key, PersistentDataType.LONG, l);
+			}
+			stack.setItemMeta(meta);
+			frame.setItem(stack);
+		}
 	}
 
 	public long getShopMeta(ItemFrame frame) {

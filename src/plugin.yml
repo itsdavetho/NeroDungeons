@@ -6,9 +6,6 @@ commands:
   nerodungeon:
     description: base nerodungeons command [nd cs|rs]
     aliases: nd
-  hologram:
-    description: create a hologram 
-    aliases: hg
 permissions:
   nerodungeons.admin:
     description: All permissions
@@ -33,7 +30,4 @@ permissions:
     default: op
   nerodungeons.nocapital:
     description: Buy without money
-    default: op
-  nerodungeons.createhologram:
-    description: Create holographic text at the location
     default: op

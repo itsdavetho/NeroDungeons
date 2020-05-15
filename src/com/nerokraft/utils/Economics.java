@@ -18,9 +18,11 @@ public class Economics {
 	private double tradeValueDecay = 0.400d;
 	private double walletBufferRewards = 100;
 	private double walletBufferEconomy = 200;
+	private NeroKraft inst;
 
 	public Economics(NeroKraft inst) {
 		this.setupEconomy(inst);
+		this.inst = inst;
 	}
 
 	public double balance(UUID uuid, Currencies type) {
@@ -64,7 +66,7 @@ public class Economics {
 				return true;
 			} else {
 				if(player != null) {
-					player.sendMessage("Your balance could not be updated: " + r.errorMessage);
+					player.sendMessage(inst.getMessages().getString("EconomyNoWork") + ": " + r.errorMessage);
 				}
 			}
 		}
@@ -149,7 +151,7 @@ public class Economics {
 			if (r.transactionSuccess()) {
 				return true;
 			} else {
-				player.sendMessage("Your balance could not be updated: " + r.errorMessage);
+				player.sendMessage(inst.getMessages().getString("EconomyNoWork") + ": " + r.errorMessage);
 			}
 		}
 		return false;

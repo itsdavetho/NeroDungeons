@@ -60,8 +60,8 @@ public class CommandCreateShop {
 					Shop shop = creator.insertShop();
 					if(shop == null) {
 						Output.sendMessage(intake.getPlugin().getMessages().getString("ShopCreateFail").replace("%s", creator.getMaterial().getMaxStackSize() + ""), ChatColor.RED, player);
-						creator = null;
 					}
+					creator = null;
 				} else if (creator != null && creator.waitingForChest() == true) {
 					Output.sendMessage(intake.getPlugin().getMessages().getString("ShopSelectChest"), ChatColor.BLUE, player);
 				} else if(creator != null && creator.waitingForItem() == true) {

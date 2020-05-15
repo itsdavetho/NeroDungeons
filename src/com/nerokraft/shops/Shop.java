@@ -7,6 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -30,7 +31,6 @@ public class Shop {
 			int amount, boolean adminShop, Currencies currency, NeroShop shops, boolean canSell, long shopId2) {
 		this.setUUID(uuid);
 		this.setOwnerName(owner);
-		System.out.println(owner);
 		this.cost = cost;
 		this.amount = amount;
 		this.adminShop = adminShop;
@@ -43,9 +43,6 @@ public class Shop {
 		this.chestLocation = chestLocation;
 		if (material != null && cost > 0 && amount > 0) {
 			this.setMaterial(material);
-			System.out.println("[NeroShops] <" + owner + "> Shop at " + shopLocation.getX() + " " + shopLocation.getX()
-					+ " " + shopLocation.getX() + " on world " + shopLocation.getWorld().getName() + " selling "
-					+ material.name() + " for " + cost + " " + currency);
 		}
 	}
 
@@ -178,7 +175,6 @@ public class Shop {
 	}
 
 	public void setOwnerName(String owner) {
-		System.out.println("son " + owner);
 		this.ownerName = owner;
 	}
 
@@ -188,6 +184,14 @@ public class Shop {
 
 	public void setShopId(long int1) {
 		this.shopId = int1;
+	}
+
+	public ItemStack getItem(ItemFrame frame) {
+		long shopId = getShops().getShopMeta(frame);
+		getShops().setShopMeta(frame, 0);
+		ItemStack item = frame.getItem();
+		getShops().setShopMeta(frame, shopId);
+		return item;
 	}
 
 }

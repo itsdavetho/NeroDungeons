@@ -36,7 +36,7 @@ public class PlayerUtil {
 	}
 
 	public static User loadUser(Player p) {
-		if (!p.isOnline()) {
+		if (p == null || !p.isOnline()) {
 			throw new IllegalStateException("Player is offline!");
 		}
 		return getPermissionProvider().getUserManager().getUser(p.getUniqueId());

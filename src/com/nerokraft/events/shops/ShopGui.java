@@ -44,7 +44,7 @@ public class ShopGui implements Listener {
 		this.inv = Bukkit.createInventory(null, 27, title);
 		double sellingPrice = (shop.getCost() * shop.getShops().getPlugin().getEconomy().getValueDecay());
 		double buyingPrice = shop.getCost();
-		ItemStack item = frame.getItem();
+		ItemStack item = shop.getItem(frame);
 		String currencyName = shop.getCurrency() == Currencies.REWARD_POINTS ? "reward points" : "gold";
 		setTile(0, new ItemStack(Material.BARRIER), "Exit", "Discontinue shopping here");
 		if (PlayerUtil.hasPermission("nerodungeons.buy.many", player)) {
@@ -65,7 +65,7 @@ public class ShopGui implements Listener {
 				setTile(16, new ItemStack(Material.DIAMOND), "Sell", "Sell " + shop.getAmount() * 3,
 						"(" + Math.floor(sellingPrice * 3) + " " + currencyName + ")");
 				String stock = shop.getAdminShop() ? "~"
-						: "" + shop.getStock(((Chest) shop.getChest().getState()).getInventory(), frame.getItem());
+						: "" + shop.getStock(((Chest) shop.getChest().getState()).getInventory(), item);
 				setTile(22, new ItemStack(Material.PAPER), "Info", "Stock: " + stock);
 			}
 		}
@@ -96,8 +96,7 @@ public class ShopGui implements Listener {
 					Economics eco = shop.getShops().getPlugin().getEconomy();
 					if (slot > 0) {
 						String stock = shop.getAdminShop() ? "~"
-								: "" + shop.getStock(((Chest) shop.getChest().getState()).getInventory(),
-										frame.getItem());
+								: "" + shop.getStock(((Chest) shop.getChest().getState()).getInventory(), shop.getItem(frame));
 						setTile(22, new ItemStack(Material.PAPER), "Info", "Stock: " + stock);
 					}
 					switch (slot) {

@@ -44,7 +44,10 @@ public class ShopCreate extends Shop {
 		if (creatingShop) {
 			Material itemInHand = player.getInventory().getItemInMainHand().getType();
 			if (itemInHand != null && itemInHand != Material.AIR) {
-				ItemStack onFrame = frame.getItem();
+				if(frame.getItem() != null && frame.getItem().getType() != Material.AIR) { 
+					ItemStack onFrame = super.getItem(frame);
+					player.getInventory().addItem(onFrame);
+				}
 				ItemMeta meta = player.getInventory().getItemInMainHand().getItemMeta();
 				ItemStack stack = new ItemStack(itemInHand, 1);
 				stack.setItemMeta(meta);
@@ -56,7 +59,6 @@ public class ShopCreate extends Shop {
 						"[NeroShop] Click here or type /nd cs <amount> <cost-each> [money] to finish configuring");
 				t.setColor(ChatColor.BLUE);
 				t.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/nd cs 1 "));
-				player.getInventory().addItem(onFrame);
 				player.spigot().sendMessage(t);
 			}
 		}
@@ -110,7 +112,6 @@ public class ShopCreate extends Shop {
 			if (super.getMaterial() == null) { // why would this happen ? this should prevent it anyways.
 				super.setMaterial(Material.COBBLESTONE);
 			}
-			System.out.println(player.getName() + " is");
 			Shop shop = new Shop(super.getFrameLocation(), super.getChestLocation(), player.getUniqueId(),
 					player.getName(), super.getMaterial(), super.getCost(), super.getAmount(), super.getAdminShop(),
 					super.getCurrency(), getPlugin().getShops(), super.getCanSell(), -1);
@@ -135,6 +136,12 @@ public class ShopCreate extends Shop {
 	}
 
 	public boolean waitingForChest() {
-		return this.getAdminShop() == false && super.getChest() != null && ((super.getChest().getType().equals(Material.CHEST)) == false);
+		if(getChestLocation() == null && !this.getAdminShop()) {
+			return true;
+		} else if(getChestLocation() != null && !this.getAdminShop()) {
+			boolean isChest = getChestLocation().getBlock().getType().equals(Material.CHEST);
+			return !isChest;
+		}
+		return false;
 	}
 }

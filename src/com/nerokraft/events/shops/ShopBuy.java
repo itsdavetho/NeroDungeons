@@ -53,7 +53,8 @@ public class ShopBuy {
 			customer.playSound(shopLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 2f);
 			return false;
 		}
-		if (Items.invSpace(customer.getInventory(), shop.getMaterial()) < totalAmount) {
+		int invSpace = Items.invSpace(customer.getInventory(), shop.getItem(frame).getType());
+		if (invSpace < totalAmount) {
 			Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNeedRoom"), ChatColor.RED,
 					customer);
 			shopLocation.getWorld().spawnParticle(Particle.BARRIER, fwdOfShop, 1);
@@ -73,20 +74,21 @@ public class ShopBuy {
 		} else {
 			ShopOwner shopOwner = new ShopOwner(shop.getUUID());
 			Player owner = shopOwner.getPlayer();
+			ItemStack item = shop.getItem(frame);
 			if (!shop.getAdminShop()) {
 				Chest chest = (Chest) shop.getChest().getState();
 				Inventory shopInv = chest.getInventory();
-				ItemStack stack = new ItemStack(frame.getItem());
-				if (!shopInv.containsAtLeast(stack, totalAmount)) {
+				if (!shopInv.containsAtLeast(item, totalAmount)) {
 					if (owner != null) {
 						Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNeedStock")
 								.replace("%s", shop.getName()), ChatColor.LIGHT_PURPLE, owner);
 					}
-					int stock = shop.getStock(shopInv, stack);
+					int stock = shop.getStock(shopInv, item);
 					if (stock > 0) {
 						totalAmount = stock;
-						totalCost = Math.ceil((double)totalAmount * (shop.getCost()/shop.getAmount()));
-						Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopLastStock"), ChatColor.AQUA, customer);
+						totalCost = Math.ceil((double) totalAmount * (shop.getCost() / shop.getAmount()));
+						Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopLastStock"),
+								ChatColor.AQUA, customer);
 					} else {
 						Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNoStock"),
 								ChatColor.DARK_AQUA, customer);
@@ -95,11 +97,12 @@ public class ShopBuy {
 						return false;
 					}
 				}
-				Items.removeFromInventory(stack, totalAmount, shopInv);
+				Items.removeFromInventory(item, totalAmount, shopInv);
 			}
 			boolean sold = PlayerUtil.hasPermission("nerodungeons.nomoney", customer);
 			if (sold == false) {
-				sold = shop.getCurrency() == Currencies.REWARD_POINTS ? economy.modifyRewards(customer.getUniqueId(), -totalCost)
+				sold = shop.getCurrency() == Currencies.REWARD_POINTS
+						? economy.modifyRewards(customer.getUniqueId(), -totalCost)
 						: economy.withdraw(customer.getUniqueId(), totalCost);
 			}
 			if (sold && !shop.getAdminShop()) {
@@ -121,28 +124,25 @@ public class ShopBuy {
 							+ shop.getShops().getPlugin().getMessages().getString("ShopBought").toLowerCase() + " "
 							+ msg, ChatColor.GREEN, owner);
 				}
-				ItemStack stack = new ItemStack(shop.getMaterial());
 				if (shop.getMaterial().getMaxStackSize() >= totalAmount) {
-					stack.setAmount(totalAmount);
-					stack.setItemMeta(frame.getItem().getItemMeta());
-					customer.getInventory().addItem(stack);
+					item.setAmount(totalAmount);
+					customer.getInventory().addItem(item);
 				} else {
-					stack.setAmount(stack.getMaxStackSize());
+					item.setAmount(item.getMaxStackSize());
 					int stacksNeeded = (int) Math.floor(totalAmount / shop.getMaterial().getMaxStackSize());
 					int remainder = totalAmount - (stacksNeeded * shop.getMaterial().getMaxStackSize());
 					for (int i = 0; i < stacksNeeded; i++) {
-						customer.getInventory().addItem(stack);
+						customer.getInventory().addItem(item);
 					}
 					if (remainder > 0) {
-						stack.setAmount(remainder);
-						customer.getInventory().addItem(stack);
+						item.setAmount(remainder);
+						customer.getInventory().addItem(item);
 					}
 				}
 				shopLocation.getWorld().spawnParticle(Particle.VILLAGER_HAPPY, aboveHead, 20, 1, 1, 1);
 				customer.getWorld().playSound(customer.getLocation(), Sound.ENTITY_VILLAGER_CELEBRATE, 1.0f, 1.0f);
-				return true;
 			}
+			return sold;
 		}
-		return false;
 	}
 }
