@@ -1,5 +1,7 @@
 package com.nerokraft.events.shops;
 
+import java.util.ResourceBundle;
+
 import org.bukkit.Material;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
@@ -34,9 +36,10 @@ public class ShopCreate extends Shop {
 	}
 
 	public void informPlayer() {
-		player.sendMessage("Shop editing mode entered.");
-		player.sendMessage("Place an item on the frame to proceed");
-		player.sendMessage("Right click while sneaking to cancel");
+		ResourceBundle rb = plugin.getMessages();
+		player.sendMessage(rb.getString("ShopEdit1"));
+		player.sendMessage(rb.getString("ShopEdit2"));
+		player.sendMessage(rb.getString("ShopEdit3"));
 	}
 
 	public void updateItem(ShopInteract shopInteract) {

@@ -39,7 +39,7 @@ public class CommandCreateShop {
 						currency = Currencies.ECONOMY;
 						break;
 					default:
-						Output.sendMessage(intake.getPlugin().getMessages().getString("ShopInvalidCurrency"), ChatColor.RED, player);
+						Output.sendMessage(intake.getPlugin().getMessages().getString("ShopInvalidCurrency").replace("%s", "rewards, gold"), ChatColor.RED, player);
 						return;
 					}
 				}

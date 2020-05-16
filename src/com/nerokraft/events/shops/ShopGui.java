@@ -1,6 +1,7 @@
 package com.nerokraft.events.shops;
 
 import java.util.Arrays;
+import java.util.ResourceBundle;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -46,27 +47,32 @@ public class ShopGui implements Listener {
 		double buyingPrice = shop.getCost();
 		ItemStack item = shop.getItem(frame);
 		String currencyName = shop.getCurrency() == Currencies.REWARD_POINTS ? "reward points" : "gold";
-		setTile(0, new ItemStack(Material.BARRIER), "Exit", "Discontinue shopping here");
+		ResourceBundle rs = shop.getShops().getPlugin().getMessages();
+		String shopBuy = rs.getString("ShopBuy");
+		String shopSell = rs.getString("ShopSell");
+		setTile(0, new ItemStack(Material.BARRIER), rs.getString("ShopExit"), rs.getString("ShopExitMessage"));
 		if (PlayerUtil.hasPermission("nerodungeons.buy.many", player)) {
-			setTile(10, new ItemStack(Material.DIAMOND), "Buy", "Buy " + shop.getAmount() * 3,
+			setTile(10, new ItemStack(Material.DIAMOND), shopBuy, shopBuy + " " + shop.getAmount() * 3,
 					"(" + buyingPrice * 3 + " " + currencyName + ")");
-			setTile(11, new ItemStack(Material.GOLD_INGOT), "Buy", "Buy " + shop.getAmount() * 2,
+			setTile(11, new ItemStack(Material.GOLD_INGOT), shopBuy, shopBuy + " " + shop.getAmount() * 2,
 					"(" + buyingPrice * 2 + " " + currencyName + ")");
 		}
-		setTile(12, new ItemStack(Material.IRON_INGOT), "Buy", "Buy " + shop.getAmount() * 1,
+		setTile(12, new ItemStack(Material.IRON_INGOT), shopBuy, shopBuy + " " + shop.getAmount() * 1,
 				"(" + buyingPrice * 1 + " " + currencyName + ")");
 		inv.setItem(13, item); // just use setItem, don't wish to edit the metadata
 		if (shop.getCanSell()) {
-			setTile(14, new ItemStack(Material.IRON_INGOT), "Sell", "Sell " + shop.getAmount() * 1,
+			setTile(14, new ItemStack(Material.IRON_INGOT), shopSell, shopSell + " " + shop.getAmount() * 1,
 					"(" + Math.floor(sellingPrice) + " " + currencyName + ")");
 			if (PlayerUtil.hasPermission("nerodungeons.buy.many", player)) {
-				setTile(15, new ItemStack(Material.GOLD_INGOT), "Sell", "Sell " + shop.getAmount() * 2,
+				setTile(15, new ItemStack(Material.GOLD_INGOT), shopSell, shopSell + " " + shop.getAmount() * 2,
 						"(" + Math.floor(sellingPrice * 2) + " " + currencyName + ")");
-				setTile(16, new ItemStack(Material.DIAMOND), "Sell", "Sell " + shop.getAmount() * 3,
+				setTile(16, new ItemStack(Material.DIAMOND), shopSell, shopSell + " " + shop.getAmount() * 3,
 						"(" + Math.floor(sellingPrice * 3) + " " + currencyName + ")");
 				String stock = shop.getAdminShop() ? "~"
 						: "" + shop.getStock(((Chest) shop.getChest().getState()).getInventory(), item);
-				setTile(22, new ItemStack(Material.PAPER), "Info", "Stock: " + stock);
+				String info = rs.getString("ShopInfo");
+				String stockLang = rs.getString("ShopStock");
+				setTile(22, new ItemStack(Material.PAPER), info, stockLang + ": " + stock);
 			}
 		}
 		player.openInventory(inv);
@@ -95,9 +101,12 @@ public class ShopGui implements Listener {
 					int slot = e.getRawSlot();
 					Economics eco = shop.getShops().getPlugin().getEconomy();
 					if (slot > 0) {
+						ResourceBundle rs = shop.getShops().getPlugin().getMessages();
+						String info = rs.getString("ShopInfo");
+						String stockLang = rs.getString("ShopStock");
 						String stock = shop.getAdminShop() ? "~"
 								: "" + shop.getStock(((Chest) shop.getChest().getState()).getInventory(), shop.getItem(frame));
-						setTile(22, new ItemStack(Material.PAPER), "Info", "Stock: " + stock);
+						setTile(22, new ItemStack(Material.PAPER), info, stockLang + ": " + stock);
 					}
 					switch (slot) {
 					case 0:
