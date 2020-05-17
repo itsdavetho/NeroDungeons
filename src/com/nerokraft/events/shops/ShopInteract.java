@@ -185,7 +185,7 @@ public class ShopInteract implements Listener {
 				&& PlayerUtil.hasPermission("nerodungeons.createshop", player)) {
 			if (block.getType() == Material.CHEST) {
 				ShopCreate creator = instance.getShops().getShopInteractions().getCreator(player);
-				if (creator != null && creator.waitingForChest() && !creator.getAdminShop()) {
+				if (!creator.getAdminShop() && creator != null && creator.waitingForChest()) {
 					Location chestLocation = block.getLocation();
 					creator.setChestLocation(chestLocation);
 					Output.sendMessage(instance.getMessages().getString("ShopChestSelected"), ChatColor.DARK_PURPLE,

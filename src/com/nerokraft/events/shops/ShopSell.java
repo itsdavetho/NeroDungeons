@@ -31,7 +31,6 @@ public class ShopSell {
 		int totalAmount = quantity * shop.getAmount();
 		double totalPayed = Math.floor(shop.getCost() * shop.getShops().getPlugin().getEconomy().getValueDecay())
 				* quantity;
-		Material material = frame.getItem().getType();
 		boolean sold = PlayerUtil.hasPermission("nerodungeons.nomoney", shop.getPlayer()) || shop.getAdminShop();
 		boolean canSellSelf = shop.getUUID().equals(customer.getUniqueId())
 				&& PlayerUtil.hasPermission("nerodungeons.buy.own", customer);
@@ -64,7 +63,7 @@ public class ShopSell {
 				boolean shopHasSpace = shop.getAdminShop();
 				if (!shop.getAdminShop()) {
 					chest = (Chest) shop.getChest().getState();
-					shopHasSpace = Items.invSpace(chest.getInventory(), material) >= totalAmount;
+					shopHasSpace = Items.invSpace(chest.getInventory(), item) >= totalAmount;
 				}
 				if (shopHasSpace) {
 					if (sold == false && !customer.getUniqueId().equals(shop.getUUID())) {

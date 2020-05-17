@@ -81,9 +81,9 @@ public class ShopCreate extends Shop {
 			return true;
 		} else if (creator != null) {
 			Material itemInHand = player.getInventory().getItemInMainHand().getType();
-			boolean editAdminShop = itemInHand.equals(Material.BLAZE_ROD)
+			boolean toggleAdminShop = itemInHand.equals(Material.BLAZE_ROD)
 					&& PlayerUtil.hasPermission("nerodungeons.admin", player);
-			if (editAdminShop && sneaking) {
+			if (sneaking && toggleAdminShop) {
 				creator.setAdminShop(!creator.getAdminShop());
 				String shopType = creator.getAdminShop() ? creator.getPlugin().getMessages().getString("ShopAdmin")
 						: creator.getPlugin().getMessages().getString("ShopRegular");
@@ -91,14 +91,14 @@ public class ShopCreate extends Shop {
 				Output.sendMessage(creator.getPlugin().getMessages().getString("ShopSetType").replace("%s", shopType),
 						color, player);
 				return true;
-			} else if (itemInHand.equals(Material.STICK) && sneaking) {
+			} else if (sneaking && itemInHand.equals(Material.STICK)) {
 				creator.setCanSell(!creator.getCanSell());
 				Output.sendMessage(
 						creator.getCanSell() ? creator.getPlugin().getMessages().getString("ShopCanSell")
 								: creator.getPlugin().getMessages().getString("ShopCantSell"),
 						creator.getCanSell() ? ChatColor.GREEN : ChatColor.RED, player);
 				return true;
-			} else if (!editAdminShop && sneaking) {
+			} else if (sneaking && !toggleAdminShop) {
 				si.removeShopCreator(player);
 				return false;
 			} else if (!sneaking) {
@@ -112,8 +112,12 @@ public class ShopCreate extends Shop {
 
 	public Shop insertShop() {
 		if (super.getAmount() > 0 && super.getCost() > 0) {
-			if (super.getMaterial() == null) { // why would this happen ? this should prevent it anyways.
-				super.setMaterial(Material.COBBLESTONE);
+			if (super.getMaterial() == null) { // why would this happen ?
+				Output.sendMessage(getPlugin().getMessages().getString("ShopCreateError"), ChatColor.RED, player);
+				this.getPlugin().getShops().getShopInteractions().removeShopCreator(player, false);
+				this.player = null;
+				this.frame = null;
+				return null;
 			}
 			Shop shop = new Shop(super.getFrameLocation(), super.getChestLocation(), player.getUniqueId(),
 					player.getName(), super.getMaterial(), super.getCost(), super.getAmount(), super.getAdminShop(),

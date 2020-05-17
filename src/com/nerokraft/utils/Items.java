@@ -23,13 +23,13 @@ public class Items {
 		}
 	}
 
-	public static int invSpace(Inventory inv, Material m) {
+	public static int invSpace(Inventory inv, ItemStack m) {
 		int count = 0;
 		ItemStack[] items = inv.getStorageContents();
 		for (ItemStack item : items) {
 			if (item == null || item.getType() == Material.AIR) {
 				count += m.getMaxStackSize();
-			} else if (item.getType().equals(m) && item.getAmount() < m.getMaxStackSize()) {
+			} else if (item.isSimilar(m) && item.getAmount() < m.getMaxStackSize()) {
 				count += m.getMaxStackSize() - item.getAmount();
 			}
 		}

@@ -53,7 +53,7 @@ public class ShopBuy {
 			customer.playSound(shopLocation, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 2f);
 			return false;
 		}
-		int invSpace = Items.invSpace(customer.getInventory(), shop.getItem(frame).getType());
+		int invSpace = Items.invSpace(customer.getInventory(), shop.getItem(frame));
 		if (invSpace < totalAmount) {
 			Output.sendMessage(shop.getShops().getPlugin().getMessages().getString("ShopNeedRoom"), ChatColor.RED,
 					customer);
